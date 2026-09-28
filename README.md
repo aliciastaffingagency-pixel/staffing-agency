@@ -1,36 +1,26 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Alicia Staffing Agency
 
-## Getting Started
+This platform lets clients browse, book, contract, pay for and rate vetted home and business staff.
+The agency owner manages the staff catalog, categories, placements and payments.
 
-First, run the development server:
+- **Handoff notes, status and open items:** [docs/PROJECT_NOTES.md](docs/PROJECT_NOTES.md)
+- **Full product brief and phase plan:** [docs/BUILD_BRIEF.md](docs/BUILD_BRIEF.md)
+
+## Quick start
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env.local   # then fill in the Supabase keys and DATABASE_URL
+npm run dev                  # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+| Command | What it does |
+| --- | --- |
+| `npm run dev` | Starts the local dev server |
+| `npm run build` | Production build, including the type check |
+| `npm run db:push` | Applies `supabase/migrations`, then regenerates the DB types |
+| `npm run db:types` | Regenerates `src/lib/supabase/database.types.ts` |
+| `node scripts/test-rls.mjs` | End-to-end row-level-security checks |
+| `node scripts/create-admin.mjs <email>` | Creates or promotes a super admin |
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Built with Next.js 16, Supabase, Tailwind CSS v4 and Motion.

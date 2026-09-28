@@ -1,26 +1,92 @@
 @import "tailwindcss";
 
+@theme {
+  /* Magenta / pink — primary brand colour from the flyer */
+  --color-brand-50: #fdf1f6;
+  --color-brand-100: #fbe1ed;
+  --color-brand-200: #f7c0da;
+  --color-brand-300: #f090bc;
+  --color-brand-400: #e65a9c;
+  --color-brand-500: #d61f7a;
+  --color-brand-600: #b81566;
+  --color-brand-700: #931152;
+  --color-brand-800: #6e0e3e;
+  --color-brand-900: #4a0a2a;
+
+  /* Navy — headings, trust */
+  --color-navy-50: #eef0f8;
+  --color-navy-100: #d9ddef;
+  --color-navy-200: #b1b8dc;
+  --color-navy-300: #7f89bf;
+  --color-navy-400: #4d5896;
+  --color-navy-500: #333d7a;
+  --color-navy-600: #262e63;
+  --color-navy-700: #1f2555;
+  --color-navy-800: #1c1f4a;
+  --color-navy-900: #121433;
+
+  /* Gold — crown, badges, accents */
+  --color-gold-100: #fbf1d9;
+  --color-gold-200: #f4dfa8;
+  --color-gold-300: #ecca78;
+  --color-gold-400: #e0b457;
+  --color-gold-500: #d4a43a;
+  --color-gold-600: #b3862a;
+  --color-gold-700: #8a6620;
+
+  --color-cream: #fff8f1;
+  --color-blush: #fdf1f5;
+
+  --font-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+  --font-script: var(--font-dancing), cursive;
+
+  --shadow-soft: 0 10px 30px -12px rgb(28 31 74 / 0.18);
+  --shadow-lift: 0 22px 45px -18px rgb(214 31 122 / 0.35);
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-cream);
+  color: var(--color-navy-800);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--color-brand-200);
+  color: var(--color-navy-900);
+}
+
+@utility text-gradient-brand {
+  background-image: linear-gradient(100deg, var(--color-brand-500), var(--color-brand-400) 45%, var(--color-gold-500));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@utility bg-sparkle {
+  background-image:
+    radial-gradient(circle at 12% 18%, rgb(212 164 58 / 0.18) 0 2px, transparent 3px),
+    radial-gradient(circle at 78% 12%, rgb(214 31 122 / 0.14) 0 2px, transparent 3px),
+    radial-gradient(circle at 64% 72%, rgb(212 164 58 / 0.16) 0 2px, transparent 3px),
+    radial-gradient(circle at 28% 82%, rgb(214 31 122 / 0.12) 0 2px, transparent 3px);
+  background-size: 340px 340px;
+}
+
+/* Leaflet map sits under the sticky header */
+.leaflet-container {
+  font-family: var(--font-sans);
+  z-index: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
 }
