@@ -19,7 +19,7 @@ export default async function LoginPage({ searchParams }: PageProps<'/login'>) {
       </div>
       <p className="mt-8 text-center text-sm text-navy-500">
         New here?{' '}
-        <Link href="/signup" className="font-semibold text-brand-600 hover:underline">Create a free account</Link>
+        <Link href={`/signup?next=${encodeURIComponent(next)}`} className="font-semibold text-brand-600 hover:underline">Create a free account</Link>
       </p>
     </>
   )

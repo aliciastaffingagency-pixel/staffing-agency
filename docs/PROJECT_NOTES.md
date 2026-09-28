@@ -102,9 +102,19 @@ The design is **multi-tenant ready:** every business table has an `agency_id`, a
 - [x] Postgres-backed rate limiter (`hit_rate_limit` RPC) on public endpoints; honeypot on the application form
 - [x] Tests: `node scripts/test-rls.mjs` (37 checks) and Playwright `npm run e2e` (needs `npm run dev -- -p 3100` running)
 
-### Phases 3–7
+### Phase 3 — Bookings, contracts, payments, notifications ✅ (2026-09-28)
+- [x] `/book` (from any staff profile or service page): choosing a service **lists the people available in it** as cards to pick from, or "Let the agency choose for me"; start date, live-in/out, area, budget, job notes. Sign-up/login round-trips back via `?next=`.
+- [x] `/admin/bookings`: tabs (needs action / contracted / active / closed); booking page to confirm or assign staff, generate the contract from the active template, countersign, record manual payments (M-Pesa/bank/cash/card), withdraw contract, end placement, cancel
+- [x] Contracts: template with `{{placeholders}}` (Admin → Settings, versioned; starter terms flagged until the owner saves them), typed-name e-signature with timestamp + IP, PDF generated with pdf-lib into the private `contracts` bucket
+- [x] State machine in `lib/contracts.ts#advanceContract`: sent → client_signed → fully_signed → active (both signed + fee paid). Booking → contracted on client signature, → active when paid; staff marked placed / available again when the placement ends
+- [x] Payments (`lib/payments.ts`): M-Pesa Daraja STK Push + callback `/api/payments/mpesa/callback?secret=…` (idempotent, amount-checked) + STK query fallback; Paystack card checkout + signed webhook `/api/payments/paystack/webhook`. Without keys, clients see manual-payment instructions and the admin records payments. `MPESA_ENV=simulate` = local testing only.
+- [x] `/admin/payments`: outstanding invoices, received this month / all time, awaiting signature, full ledger
+- [x] Notifications: in-app bell with Supabase Realtime in every portal; email (Resend) and SMS (Africa's Talking) sent after the response once keys are set
+- [x] `/admin/settings`: agency details, homepage counters (real figures only), contract template editor
+- [x] e2e: full request → pick staff → match → contract → sign → M-Pesa callback → countersign → active → end flow, plus cross-client isolation
+
+### Phases 4–7
 See `docs/BUILD_BRIEF.md`:
-- Phase 3: bookings, contracts, M-Pesa and notifications.
 - Phase 4: ratings, messaging and claims.
 - Phase 5: trust features, AI and analytics.
 - Phase 6: Expo mobile app.

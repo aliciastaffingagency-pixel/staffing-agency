@@ -1,4 +1,5 @@
 import 'server-only'
+import { after } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { Enums } from '@/lib/supabase/database.types'
 
@@ -88,6 +89,12 @@ export async function notify(input: NotifyInput & { sms?: boolean }) {
   })
   if (error) console.error('notification insert failed', error.message)
 
+  // Email / SMS go out after the response so users aren't kept waiting on providers.
+  after(() => deliver(input))
+}
+
+async function deliver(input: NotifyInput & { sms?: boolean }) {
+  const admin = createAdminClient()
   const subject = input.subject ?? input.message.slice(0, 80)
   if (input.userId) {
     const { data: profile } = await admin.from('profiles').select('email, phone').eq('id', input.userId).maybeSingle()

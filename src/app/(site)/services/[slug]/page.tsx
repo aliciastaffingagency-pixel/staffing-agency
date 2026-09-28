@@ -5,7 +5,7 @@ import { ArrowLeft } from 'lucide-react'
 import { CategoryIcon } from '@/components/category-icon'
 import { Reveal, Stagger, StaggerItem } from '@/components/motion'
 import { StaffCard, STAFF_CARD_COLUMNS } from '@/components/staff/staff-card'
-import { buttonClass } from '@/components/ui/button'
+import { buttonClass, ButtonLink } from '@/components/ui/button'
 import { WhatsAppIcon } from '@/components/icons'
 import { getAgency, getCategories, whatsappLink } from '@/lib/agency'
 import { createClient } from '@/lib/supabase/server'
@@ -49,6 +49,9 @@ export default async function CategoryPage({ params }: PageProps<'/services/[slu
             <h1 className="text-4xl font-extrabold tracking-tight text-navy-800">{category.name}</h1>
             {category.description && <p className="mt-2 max-w-2xl text-lg text-navy-600">{category.description}</p>}
           </div>
+          <ButtonLink href={`/book?category=${category.slug}`} size="lg" className="sm:ml-auto">
+            Request a {category.name}
+          </ButtonLink>
         </Reveal>
 
         {staff && staff.length > 0 ? (

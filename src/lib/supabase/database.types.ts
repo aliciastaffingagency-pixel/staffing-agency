@@ -104,6 +104,8 @@ export type Database = {
           notes: string | null
           created_at: string
           updated_at: string
+          budget: number | null
+          cancelled_reason: string | null
         }
         Insert: {
           id?: string
@@ -118,6 +120,8 @@ export type Database = {
           notes?: string | null
           created_at?: string
           updated_at?: string
+          budget?: number | null
+          cancelled_reason?: string | null
         }
         Update: {
           id?: string
@@ -132,6 +136,8 @@ export type Database = {
           notes?: string | null
           created_at?: string
           updated_at?: string
+          budget?: number | null
+          cancelled_reason?: string | null
         }
         Relationships: [
           {
@@ -280,6 +286,11 @@ export type Database = {
           status: Database['public']['Enums']['contract_status']
           created_at: string
           updated_at: string
+          amount_due: number | null
+          duties: string | null
+          live_arrangement: Database['public']['Enums']['live_arrangement'] | null
+          ended_at: string | null
+          end_reason: string | null
         }
         Insert: {
           id?: string
@@ -302,6 +313,11 @@ export type Database = {
           status?: Database['public']['Enums']['contract_status']
           created_at?: string
           updated_at?: string
+          amount_due?: number | null
+          duties?: string | null
+          live_arrangement?: Database['public']['Enums']['live_arrangement'] | null
+          ended_at?: string | null
+          end_reason?: string | null
         }
         Update: {
           id?: string
@@ -324,6 +340,11 @@ export type Database = {
           status?: Database['public']['Enums']['contract_status']
           created_at?: string
           updated_at?: string
+          amount_due?: number | null
+          duties?: string | null
+          live_arrangement?: Database['public']['Enums']['live_arrangement'] | null
+          ended_at?: string | null
+          end_reason?: string | null
         }
         Relationships: [
           {
@@ -1220,7 +1241,7 @@ export type Database = {
       employment_type: 'full_time' | 'part_time' | 'contract' | 'temporary' | 'casual'
       engagement_preference: 'join_agency' | 'own_terms'
       live_arrangement: 'live_in' | 'live_out' | 'either'
-      notification_type: 'new_request' | 'matched' | 'contract_ready' | 'payment_received' | 'rating_submitted' | 'replacement_requested' | 'dispute_raised' | 'new_application'
+      notification_type: 'new_request' | 'matched' | 'contract_ready' | 'payment_received' | 'rating_submitted' | 'replacement_requested' | 'dispute_raised' | 'new_application' | 'contract_signed' | 'booking_update'
       payment_method: 'mpesa' | 'card' | 'cash' | 'bank'
       payment_status: 'pending' | 'processing' | 'paid' | 'failed' | 'refunded'
       rate_period: 'day' | 'month'

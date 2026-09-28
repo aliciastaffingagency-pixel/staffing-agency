@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Field, FormAlert } from '@/components/ui/form'
 import { signUp, type AuthState } from '../actions'
 
-export function SignupForm() {
+export function SignupForm({ next }: { next: string }) {
   const [state, action, pending] = useActionState<AuthState, FormData>(signUp, {})
   const f = state.fields ?? {}
 
@@ -14,6 +14,7 @@ export function SignupForm() {
 
   return (
     <form action={action} className="grid gap-4">
+      <input type="hidden" name="next" value={next} />
       <fieldset>
         <legend className="text-sm font-semibold text-navy-700">I&apos;m hiring for a…</legend>
         <div className="mt-1.5 grid grid-cols-2 gap-3">

@@ -1,4 +1,5 @@
 import { PortalShell } from '@/components/portal/portal-shell'
+import { Notifications } from '@/components/portal/notifications'
 import { requireRole } from '@/lib/auth'
 
 export default async function AccountLayout({ children }: { children: React.ReactNode }) {
@@ -7,10 +8,12 @@ export default async function AccountLayout({ children }: { children: React.Reac
     <PortalShell
       title="My account"
       userName={session.full_name ?? session.email ?? 'My account'}
+      headerExtra={<Notifications />}
       roleLabel="Client"
       links={[
         { href: '/account', label: 'My hires' },
-        { href: '/services', label: 'Browse staff' },
+        { href: '/book', label: 'Request staff' },
+        { href: '/staff', label: 'Browse staff' },
       ]}
     >
       {children}

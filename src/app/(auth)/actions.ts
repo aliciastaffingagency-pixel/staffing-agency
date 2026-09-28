@@ -68,6 +68,7 @@ export async function signUp(_prev: AuthState, formData: FormData): Promise<Auth
   if (!parsed.success) return { error: parsed.error.issues[0].message, fields }
 
   const { password, ...profile } = parsed.data
+  const next = safeNext(formData.get('next'), '/account')
   const phone = profile.phone.replace(/^0/, '+254').replace(/^254/, '+254')
 
   const supabase = await createClient()
@@ -75,13 +76,13 @@ export async function signUp(_prev: AuthState, formData: FormData): Promise<Auth
     email: profile.email,
     password,
     options: {
-      emailRedirectTo: callbackUrl('/account'),
+      emailRedirectTo: callbackUrl(next),
       data: { full_name: profile.full_name, phone, client_kind: profile.client_kind, agency_slug: AGENCY_SLUG },
     },
   })
   if (error) return { error: authError(error.message), fields }
 
   // Email confirmation off → signed in immediately.
-  if (data.session) redirect('/account')
+  if (data.session) redirect(next)
   return { message: `Almost there! We sent a confirmation link to ${profile.email}. Click it to activate your account.` }
 }
