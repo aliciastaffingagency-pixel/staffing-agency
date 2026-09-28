@@ -21,6 +21,7 @@ const check = (name, ok, detail = '') => {
 const started = new Date().toISOString()
 const tag = randomBytes(4).toString('hex')
 const created = []
+const createdStaff = []
 
 async function makeUser(label) {
   const email = `rls-${label}-${tag}@example.test`
@@ -105,7 +106,53 @@ try {
   }
   const adminAudit = await admin.client.from('audit_log').select('id').gte('created_at', started)
   check('admin reads audit log (category changes recorded)', (adminAudit.data ?? []).length >= 2, adminAudit.error?.message)
+
+  // ---- Phase 2: staff profiles, derived badges, catalog
+  const staff = await admin.client.from('staff_profiles')
+    .insert({ agency_id: agencyId, category_id: cats.data[0].id, full_name: `Test Staff ${tag}`, month_rate: 15000, verified_badge: true, rating_avg: 5 })
+    .select('id, verified_badge, rating_avg').single()
+  check('admin creates staff profile', !staff.error, staff.error?.message)
+  const staffId = staff.data?.id
+  if (staffId) createdStaff.push(staffId)
+  check('insert cannot smuggle badges/ratings', staff.data?.verified_badge === false && Number(staff.data?.rating_avg) === 0, JSON.stringify(staff.data))
+  const badgeEdit = await admin.client.from('staff_profiles').update({ trained_badge: true }).eq('id', staffId)
+  check('admin cannot set badges directly', Boolean(badgeEdit.error))
+  await admin.client.from('staff_vetting_checks').insert({ agency_id: agencyId, staff_id: staffId, check_type: 'id_verification', confirmed_by: admin.id })
+  await admin.client.from('staff_vetting_checks').insert({ agency_id: agencyId, staff_id: staffId, check_type: 'training', confirmed_by: admin.id })
+  const afterChecks = await admin.client.from('staff_profiles').select('verified_badge, trained_badge, background_checked_badge, vetting_status').eq('id', staffId).single()
+  check('vetting checks drive badges', afterChecks.data?.verified_badge && afterChecks.data?.trained_badge && !afterChecks.data?.background_checked_badge && afterChecks.data?.vetting_status === 'in_review', JSON.stringify(afterChecks.data))
+  const anonCatalog = await anon.from('staff_catalog').select('id, month_rate').eq('id', staffId)
+  check('anon sees staff in catalog with rate', anonCatalog.data?.[0]?.month_rate === 15000, anonCatalog.error?.message)
+  const clientChecks = await a.client.from('staff_vetting_checks').select('id').eq('staff_id', staffId)
+  check('client cannot read vetting checks', (clientChecks.data ?? []).length === 0)
+  const clientStaffEdit = await a.client.from('staff_profiles').update({ full_name: 'hacked' }).eq('id', staffId).select()
+  check('client cannot edit staff', (clientStaffEdit.data ?? []).length === 0)
+
+  // ---- Jobs board
+  const draft = await admin.client.from('vacancies').insert({ agency_id: agencyId, title: `Draft job ${tag}`, description: 'A draft vacancy for tests', status: 'draft' }).select('id').single()
+  const open = await admin.client.from('vacancies').insert({ agency_id: agencyId, title: `Open job ${tag}`, description: 'An open vacancy for tests', status: 'open', required_documents: ['National ID'] }).select('id').single()
+  check('admin posts vacancies', !draft.error && !open.error, draft.error?.message ?? open.error?.message)
+  const anonJobs = await anon.from('vacancies').select('id').in('id', [draft.data?.id, open.data?.id])
+  check('public sees only open vacancies', anonJobs.data?.length === 1 && anonJobs.data[0].id === open.data?.id, JSON.stringify(anonJobs.data))
+  const anonApply = await anon.from('job_applications').insert({ agency_id: agencyId, full_name: 'Bot', phone: '+254700000000', engagement: 'join_agency' })
+  check('public cannot write applications directly', Boolean(anonApply.error))
+  const app = await service.from('job_applications').insert({ agency_id: agencyId, vacancy_id: open.data?.id, full_name: 'Applicant Test', phone: '+254700000001', engagement: 'own_terms', preferred_terms: 'Weekends off' }).select('id').single()
+  const clientApps = await a.client.from('job_applications').select('id').eq('id', app.data?.id)
+  check("clients cannot read others' applications", (clientApps.data ?? []).length === 0)
+  const adminApps = await admin.client.from('job_applications').select('id').eq('id', app.data?.id)
+  check('admin reads applications', adminApps.data?.length === 1, adminApps.error?.message)
+  const signed = await service.storage.from('applications').createSignedUploadUrl(`${agencyId}/${tag}/test.pdf`)
+  const up = signed.data && await anon.storage.from('applications').uploadToSignedUrl(signed.data.path, signed.data.token, new Blob(['%PDF-1.4 test'], { type: 'application/pdf' }), { contentType: 'application/pdf' })
+  check('applicant uploads via signed URL', !up?.error, up?.error?.message)
+  const anonRead = await anon.storage.from('applications').download(`${agencyId}/${tag}/test.pdf`)
+  check('public cannot read application files', Boolean(anonRead.error))
+  const adminRead = await admin.client.storage.from('applications').download(`${agencyId}/${tag}/test.pdf`)
+  check('admin reads application files', !adminRead.error, adminRead.error?.message)
+  await service.storage.from('applications').remove([`${agencyId}/${tag}/test.pdf`])
+  await service.from('vacancies').delete().in('id', [draft.data?.id, open.data?.id])
+  await service.from('job_applications').delete().eq('id', app.data?.id)
 } finally {
+  for (const id of createdStaff) await service.from('staff_profiles').delete().eq('id', id)
   for (const id of created) await service.auth.admin.deleteUser(id)
   await service.from('audit_log').delete().gte('created_at', started)
   console.log(`\ncleaned up ${created.length} test users`)

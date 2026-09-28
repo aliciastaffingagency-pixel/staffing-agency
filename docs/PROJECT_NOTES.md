@@ -93,10 +93,14 @@ The design is **multi-tenant ready:** every business table has an `agency_id`, a
 - [x] RLS end-to-end tests: 22/22 pass
 - [x] Production build passes
 
-### Phase 2 — Staff catalog & admin CRUD ⏭ next
-- Admin: add, rename, reorder, hide and delete categories, with an icon picker
-- Admin: create, edit and deactivate staff profiles; upload photos and ID documents to Storage; badge toggles
-- Catalog filters: category, location, availability, live-in/live-out, price band. Individual staff profile pages.
+### Phase 2 — Staff catalog, admin CRUD & jobs board ✅ (2026-09-28)
+- [x] `/admin/categories`: add, rename, describe, pick icon, reorder, hide/show, delete (blocked while staff are in it)
+- [x] `/admin/staff`: list with search/filters; create/edit/deactivate; photo + ID uploads go **browser → Supabase Storage** (avoids Vercel's 4.5 MB body limit); map pin location picker; optional staff login invite
+- [x] **Vetting checks drive badges** (`staff_vetting_checks` + trigger): ID verified → Verified; references + background check → Background-checked; training → Trained. Badge/rating columns can't be written through the API.
+- [x] Public catalog `/staff` (filters: role, area, live-in/out, budget band, availability, keyword) and profile pages `/staff/[id]` (badges, rates, video intro, published reviews via `staff_reviews` view)
+- [x] **Jobs board (owner request, added mid-build):** `/admin/jobs` to post vacancies with required documents; public `/jobs`, `/jobs/[id]` and `/jobs/apply` (general application). Applicants need no account, upload documents to the private `applications` bucket via signed upload URLs, and choose **"Join the agency as a member"** or **"Agree my own terms"** (preferred terms + expected pay). `/admin/applications` to review, add notes, change status, open documents, and **convert to a staff profile** (copies details + ID document).
+- [x] Postgres-backed rate limiter (`hit_rate_limit` RPC) on public endpoints; honeypot on the application form
+- [x] Tests: `node scripts/test-rls.mjs` (37 checks) and Playwright `npm run e2e` (needs `npm run dev -- -p 3100` running)
 
 ### Phases 3–7
 See `docs/BUILD_BRIEF.md`:

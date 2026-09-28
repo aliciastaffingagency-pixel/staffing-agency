@@ -1,15 +1,14 @@
 import type { Metadata } from 'next'
-import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ArrowLeft, BadgeCheck, GraduationCap, MapPin, ShieldCheck, Star, UserRound } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { CategoryIcon } from '@/components/category-icon'
-import { HoverLift, Reveal, Stagger, StaggerItem } from '@/components/motion'
+import { Reveal, Stagger, StaggerItem } from '@/components/motion'
+import { StaffCard, STAFF_CARD_COLUMNS } from '@/components/staff/staff-card'
 import { buttonClass } from '@/components/ui/button'
 import { WhatsAppIcon } from '@/components/icons'
 import { getAgency, getCategories, whatsappLink } from '@/lib/agency'
 import { createClient } from '@/lib/supabase/server'
-import { formatKes } from '@/lib/utils'
 
 async function getCategory(slug: string) {
   const categories = await getCategories()
@@ -22,8 +21,6 @@ export async function generateMetadata({ params }: PageProps<'/services/[slug]'>
   return category ? { title: category.name, description: category.description ?? undefined } : {}
 }
 
-const LIVE_LABEL = { live_in: 'Live-in', live_out: 'Live-out', either: 'Live-in or out' } as const
-
 export default async function CategoryPage({ params }: PageProps<'/services/[slug]'>) {
   const { slug } = await params
   const [agency, category] = await Promise.all([getAgency(), getCategory(slug)])
@@ -32,7 +29,7 @@ export default async function CategoryPage({ params }: PageProps<'/services/[slu
   const supabase = await createClient()
   const { data: staff } = await supabase
     .from('staff_catalog')
-    .select('id, full_name, photo_url, bio, location_text, live_arrangement, day_rate, month_rate, years_experience, verified_badge, trained_badge, background_checked_badge, rating_avg, rating_count, availability')
+    .select(STAFF_CARD_COLUMNS)
     .eq('agency_id', agency.id)
     .eq('category_id', category.id)
     .order('rating_avg', { ascending: false })
@@ -58,43 +55,7 @@ export default async function CategoryPage({ params }: PageProps<'/services/[slu
           <Stagger className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {staff.map((s) => (
               <StaggerItem key={s.id}>
-                <HoverLift className="h-full overflow-hidden rounded-3xl border border-brand-100 bg-white">
-                  <div className="relative aspect-[4/3] bg-gradient-to-br from-brand-50 to-gold-100">
-                    {s.photo_url ? (
-                      <Image src={s.photo_url} alt={s.full_name ?? ''} fill sizes="(min-width:1024px) 33vw, (min-width:640px) 50vw, 100vw" className="object-cover" />
-                    ) : (
-                      <UserRound className="absolute inset-0 m-auto size-20 text-brand-200" />
-                    )}
-                    {s.availability === 'available' && (
-                      <span className="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-emerald-700">Available</span>
-                    )}
-                  </div>
-                  <div className="p-5">
-                    <div className="flex items-start justify-between gap-3">
-                      <h2 className="text-lg font-bold text-navy-800">{s.full_name}</h2>
-                      {(s.rating_count ?? 0) > 0 && (
-                        <span className="inline-flex items-center gap-1 text-sm font-semibold text-navy-700">
-                          <Star className="size-4 fill-gold-400 text-gold-500" /> {Number(s.rating_avg).toFixed(1)}
-                        </span>
-                      )}
-                    </div>
-                    <p className="mt-1 flex flex-wrap items-center gap-x-3 text-sm text-navy-500">
-                      {s.location_text && <span className="inline-flex items-center gap-1"><MapPin className="size-3.5" />{s.location_text}</span>}
-                      {s.live_arrangement && <span>{LIVE_LABEL[s.live_arrangement]}</span>}
-                      {s.years_experience != null && <span>{s.years_experience} yrs exp.</span>}
-                    </p>
-                    <div className="mt-3 flex flex-wrap gap-1.5">
-                      {s.verified_badge && <Badge icon={<BadgeCheck className="size-3.5" />}>Verified</Badge>}
-                      {s.trained_badge && <Badge icon={<GraduationCap className="size-3.5" />}>Trained</Badge>}
-                      {s.background_checked_badge && <Badge icon={<ShieldCheck className="size-3.5" />}>Background-checked</Badge>}
-                    </div>
-                    {(s.month_rate || s.day_rate) && (
-                      <p className="mt-4 text-sm text-navy-500">
-                        From <span className="text-base font-bold text-navy-800">{formatKes(s.month_rate ?? s.day_rate)}</span> / {s.month_rate ? 'month' : 'day'}
-                      </p>
-                    )}
-                  </div>
-                </HoverLift>
+                <StaffCard s={s} />
               </StaggerItem>
             ))}
           </Stagger>
@@ -117,13 +78,5 @@ export default async function CategoryPage({ params }: PageProps<'/services/[slu
         )}
       </div>
     </section>
-  )
-}
-
-function Badge({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
-  return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2.5 py-1 text-xs font-semibold text-brand-700">
-      {icon} {children}
-    </span>
   )
 }

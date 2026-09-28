@@ -416,6 +416,115 @@ export type Database = {
           }
         ]
       }
+      job_applications: {
+        Row: {
+          id: string
+          agency_id: string
+          vacancy_id: string | null
+          applicant_user_id: string | null
+          full_name: string
+          phone: string
+          email: string | null
+          location_text: string | null
+          date_of_birth: string | null
+          years_experience: number | null
+          skills: string[]
+          languages: string[]
+          cover_note: string | null
+          engagement: Database['public']['Enums']['engagement_preference']
+          preferred_terms: string | null
+          expected_pay: number | null
+          expected_pay_period: Database['public']['Enums']['rate_period'] | null
+          documents: Json
+          consent_at: string
+          status: Database['public']['Enums']['application_status']
+          admin_notes: string | null
+          reviewed_by: string | null
+          reviewed_at: string | null
+          staff_id: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          agency_id: string
+          vacancy_id?: string | null
+          applicant_user_id?: string | null
+          full_name: string
+          phone: string
+          email?: string | null
+          location_text?: string | null
+          date_of_birth?: string | null
+          years_experience?: number | null
+          skills?: string[]
+          languages?: string[]
+          cover_note?: string | null
+          engagement: Database['public']['Enums']['engagement_preference']
+          preferred_terms?: string | null
+          expected_pay?: number | null
+          expected_pay_period?: Database['public']['Enums']['rate_period'] | null
+          documents?: Json
+          consent_at?: string
+          status?: Database['public']['Enums']['application_status']
+          admin_notes?: string | null
+          reviewed_by?: string | null
+          reviewed_at?: string | null
+          staff_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          agency_id?: string
+          vacancy_id?: string | null
+          applicant_user_id?: string | null
+          full_name?: string
+          phone?: string
+          email?: string | null
+          location_text?: string | null
+          date_of_birth?: string | null
+          years_experience?: number | null
+          skills?: string[]
+          languages?: string[]
+          cover_note?: string | null
+          engagement?: Database['public']['Enums']['engagement_preference']
+          preferred_terms?: string | null
+          expected_pay?: number | null
+          expected_pay_period?: Database['public']['Enums']['rate_period'] | null
+          documents?: Json
+          consent_at?: string
+          status?: Database['public']['Enums']['application_status']
+          admin_notes?: string | null
+          reviewed_by?: string | null
+          reviewed_at?: string | null
+          staff_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'job_applications_agency_id_fkey'
+            columns: ['agency_id']
+            isOneToOne: false
+            referencedRelation: 'agencies'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'job_applications_staff_id_fkey'
+            columns: ['staff_id']
+            isOneToOne: false
+            referencedRelation: 'staff_profiles'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'job_applications_vacancy_id_fkey'
+            columns: ['vacancy_id']
+            isOneToOne: false
+            referencedRelation: 'vacancies'
+            referencedColumns: ['id']
+          }
+        ]
+      }
       message_threads: {
         Row: {
           id: string
@@ -902,6 +1011,138 @@ export type Database = {
           }
         ]
       }
+      staff_vetting_checks: {
+        Row: {
+          id: string
+          agency_id: string
+          staff_id: string
+          check_type: Database['public']['Enums']['vetting_check_type']
+          passed: boolean
+          notes: string | null
+          confirmed_by: string | null
+          confirmed_at: string
+        }
+        Insert: {
+          id?: string
+          agency_id: string
+          staff_id: string
+          check_type: Database['public']['Enums']['vetting_check_type']
+          passed?: boolean
+          notes?: string | null
+          confirmed_by?: string | null
+          confirmed_at?: string
+        }
+        Update: {
+          id?: string
+          agency_id?: string
+          staff_id?: string
+          check_type?: Database['public']['Enums']['vetting_check_type']
+          passed?: boolean
+          notes?: string | null
+          confirmed_by?: string | null
+          confirmed_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'staff_vetting_checks_agency_id_fkey'
+            columns: ['agency_id']
+            isOneToOne: false
+            referencedRelation: 'agencies'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'staff_vetting_checks_staff_id_fkey'
+            columns: ['staff_id']
+            isOneToOne: false
+            referencedRelation: 'staff_profiles'
+            referencedColumns: ['id']
+          }
+        ]
+      }
+      vacancies: {
+        Row: {
+          id: string
+          agency_id: string
+          category_id: string | null
+          title: string
+          description: string
+          requirements: string | null
+          location_text: string | null
+          employment_type: Database['public']['Enums']['employment_type']
+          live_arrangement: Database['public']['Enums']['live_arrangement']
+          pay_min: number | null
+          pay_max: number | null
+          pay_period: Database['public']['Enums']['rate_period']
+          positions: number
+          required_documents: string[]
+          closes_on: string | null
+          status: Database['public']['Enums']['vacancy_status']
+          created_by: string | null
+          published_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          agency_id: string
+          category_id?: string | null
+          title: string
+          description: string
+          requirements?: string | null
+          location_text?: string | null
+          employment_type?: Database['public']['Enums']['employment_type']
+          live_arrangement?: Database['public']['Enums']['live_arrangement']
+          pay_min?: number | null
+          pay_max?: number | null
+          pay_period?: Database['public']['Enums']['rate_period']
+          positions?: number
+          required_documents?: string[]
+          closes_on?: string | null
+          status?: Database['public']['Enums']['vacancy_status']
+          created_by?: string | null
+          published_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          agency_id?: string
+          category_id?: string | null
+          title?: string
+          description?: string
+          requirements?: string | null
+          location_text?: string | null
+          employment_type?: Database['public']['Enums']['employment_type']
+          live_arrangement?: Database['public']['Enums']['live_arrangement']
+          pay_min?: number | null
+          pay_max?: number | null
+          pay_period?: Database['public']['Enums']['rate_period']
+          positions?: number
+          required_documents?: string[]
+          closes_on?: string | null
+          status?: Database['public']['Enums']['vacancy_status']
+          created_by?: string | null
+          published_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'vacancies_agency_id_fkey'
+            columns: ['agency_id']
+            isOneToOne: false
+            referencedRelation: 'agencies'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'vacancies_category_id_fkey'
+            columns: ['category_id']
+            isOneToOne: false
+            referencedRelation: 'staff_categories'
+            referencedColumns: ['id']
+          }
+        ]
+      }
     }
     Views: {
       staff_catalog: {
@@ -933,6 +1174,19 @@ export type Database = {
         }
         Relationships: []
       }
+      staff_reviews: {
+        Row: {
+          id: string | null
+          agency_id: string | null
+          staff_id: string | null
+          stars: number | null
+          comment: string | null
+          client_first_name: string | null
+          client_area: string | null
+          created_at: string | null
+        }
+        Relationships: []
+      }
       testimonials: {
         Row: {
           id: string | null
@@ -947,19 +1201,33 @@ export type Database = {
         Relationships: []
       }
     }
-    Functions: Record<string, never>
+    Functions: {
+      hit_rate_limit: {
+        Args: {
+          p_key: string
+          p_limit: number
+          p_window_seconds: number
+        }
+        Returns: boolean
+      }
+    }
     Enums: {
+      application_status: 'new' | 'reviewing' | 'shortlisted' | 'interview' | 'accepted' | 'rejected' | 'withdrawn'
       booking_status: 'pending' | 'matched' | 'contracted' | 'active' | 'completed' | 'cancelled'
       claim_status: 'pending' | 'confirmed' | 'rejected'
       client_kind: 'household' | 'business'
       contract_status: 'draft' | 'sent' | 'client_signed' | 'fully_signed' | 'active' | 'ended' | 'cancelled'
+      employment_type: 'full_time' | 'part_time' | 'contract' | 'temporary' | 'casual'
+      engagement_preference: 'join_agency' | 'own_terms'
       live_arrangement: 'live_in' | 'live_out' | 'either'
-      notification_type: 'new_request' | 'matched' | 'contract_ready' | 'payment_received' | 'rating_submitted' | 'replacement_requested' | 'dispute_raised'
+      notification_type: 'new_request' | 'matched' | 'contract_ready' | 'payment_received' | 'rating_submitted' | 'replacement_requested' | 'dispute_raised' | 'new_application'
       payment_method: 'mpesa' | 'card' | 'cash' | 'bank'
       payment_status: 'pending' | 'processing' | 'paid' | 'failed' | 'refunded'
       rate_period: 'day' | 'month'
       staff_availability: 'available' | 'placed' | 'unavailable'
       user_role: 'super_admin' | 'staff' | 'client'
+      vacancy_status: 'draft' | 'open' | 'closed' | 'filled'
+      vetting_check_type: 'id_verification' | 'reference_check' | 'background_check' | 'training'
       vetting_status: 'pending' | 'in_review' | 'verified' | 'rejected'
     }
     CompositeTypes: Record<string, never>

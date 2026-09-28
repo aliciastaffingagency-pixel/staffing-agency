@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { CategoryIcon } from '@/components/category-icon'
 import { EmptyState, Panel, StatCard } from '@/components/portal/portal-shell'
 import { requireRole } from '@/lib/auth'
@@ -36,7 +37,7 @@ export default async function AdminHome() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1.3fr_1fr]">
-        <Panel title="Service categories" action={<span className="rounded-full bg-gold-100 px-3 py-1 text-xs font-semibold text-gold-700">Editing arrives in Phase 2</span>}>
+        <Panel title="Service categories" action={<Link href="/admin/categories" className="text-sm font-semibold text-brand-600 hover:underline">Manage</Link>}>
           <ul className="grid gap-2 sm:grid-cols-2">
             {categories.data?.map((c) => (
               <li key={c.id} className="flex items-center gap-3 rounded-2xl bg-blush px-4 py-3">

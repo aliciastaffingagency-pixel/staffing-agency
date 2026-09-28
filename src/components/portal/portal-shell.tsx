@@ -1,37 +1,34 @@
-import Link from 'next/link'
 import { LogOut } from 'lucide-react'
 import { Logo } from '@/components/brand/logo'
+import { PortalNav, type PortalLink } from './portal-nav'
 
-export type PortalLink = { href: string; label: string }
+export type { PortalLink }
 
 export function PortalShell({
   title,
   userName,
   roleLabel,
   links,
+  headerExtra,
   children,
 }: {
   title: string
   userName: string
   roleLabel: string
   links: PortalLink[]
+  headerExtra?: React.ReactNode
   children: React.ReactNode
 }) {
   return (
     <div className="min-h-dvh bg-blush/60">
       <header className="sticky top-0 z-30 border-b border-brand-100 bg-white/90 backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
+        <div className="mx-auto flex min-h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
           <div className="flex items-center gap-6">
             <Logo className="scale-90" />
-            <nav className="hidden gap-1 md:flex" aria-label={title}>
-              {links.map((l) => (
-                <Link key={l.href} href={l.href} className="rounded-full px-3.5 py-2 text-sm font-medium text-navy-600 hover:bg-brand-50 hover:text-brand-600">
-                  {l.label}
-                </Link>
-              ))}
-            </nav>
+            <PortalNav links={links} label={title} variant="desktop" />
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
+            {headerExtra}
             <span className="hidden text-right text-sm leading-tight sm:block">
               <span className="block font-semibold text-navy-800">{userName}</span>
               <span className="text-xs text-brand-500">{roleLabel}</span>
@@ -43,6 +40,7 @@ export function PortalShell({
             </form>
           </div>
         </div>
+        <PortalNav links={links} label={title} variant="mobile" />
       </header>
       <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6">{children}</main>
     </div>
@@ -73,4 +71,50 @@ export function Panel({ title, action, children }: { title: string; action?: Rea
 
 export function EmptyState({ children }: { children: React.ReactNode }) {
   return <p className="rounded-2xl border border-dashed border-brand-200 px-5 py-8 text-center text-sm text-navy-500">{children}</p>
+}
+
+export function PageHeader({ title, description, action }: { title: string; description?: React.ReactNode; action?: React.ReactNode }) {
+  return (
+    <div className="flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <h1 className="text-3xl font-extrabold tracking-tight text-navy-800">{title}</h1>
+        {description && <p className="mt-1 max-w-2xl text-navy-500">{description}</p>}
+      </div>
+      {action}
+    </div>
+  )
+}
+
+export function StatusPill({ status, className }: { status: string; className?: string }) {
+  return (
+    <span className={`inline-flex shrink-0 items-center rounded-full px-3 py-1 text-xs font-semibold capitalize ${STATUS_STYLE[status] ?? 'bg-navy-50 text-navy-600'} ${className ?? ''}`}>
+      {status.replaceAll('_', ' ')}
+    </span>
+  )
+}
+
+const STATUS_STYLE: Record<string, string> = {
+  pending: 'bg-gold-100 text-gold-700',
+  processing: 'bg-gold-100 text-gold-700',
+  in_review: 'bg-gold-100 text-gold-700',
+  draft: 'bg-navy-50 text-navy-500',
+  matched: 'bg-navy-50 text-navy-600',
+  sent: 'bg-brand-50 text-brand-600',
+  client_signed: 'bg-brand-50 text-brand-600',
+  contracted: 'bg-brand-50 text-brand-600',
+  fully_signed: 'bg-brand-100 text-brand-700',
+  active: 'bg-emerald-50 text-emerald-700',
+  paid: 'bg-emerald-50 text-emerald-700',
+  verified: 'bg-emerald-50 text-emerald-700',
+  confirmed: 'bg-emerald-50 text-emerald-700',
+  published: 'bg-emerald-50 text-emerald-700',
+  open: 'bg-gold-100 text-gold-700',
+  resolved: 'bg-navy-50 text-navy-500',
+  completed: 'bg-navy-50 text-navy-500',
+  ended: 'bg-navy-50 text-navy-500',
+  cancelled: 'bg-red-50 text-red-600',
+  failed: 'bg-red-50 text-red-600',
+  rejected: 'bg-red-50 text-red-600',
+  refunded: 'bg-red-50 text-red-600',
+  hidden: 'bg-navy-50 text-navy-400',
 }

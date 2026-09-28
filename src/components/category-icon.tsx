@@ -12,6 +12,8 @@ export const CATEGORY_ICONS: Record<string, LucideIcon> = {
   WashingMachine, Wrench, Users,
 }
 
+export const CATEGORY_ICON_NAMES = Object.keys(CATEGORY_ICONS) as [string, ...string[]]
+
 export function CategoryIcon({ name, className }: { name: string | null; className?: string }) {
   const Icon = (name && CATEGORY_ICONS[name]) || Users
   return <Icon className={className} aria-hidden="true" />

@@ -8,7 +8,9 @@ import { MobileMenu } from './mobile-menu'
 
 export const NAV_LINKS = [
   { href: '/services', label: 'Services' },
+  { href: '/staff', label: 'Find staff' },
   { href: '/#how-it-works', label: 'How it works' },
+  { href: '/jobs', label: 'Jobs' },
   { href: '/#why-us', label: 'Why us' },
   { href: '/#contact', label: 'Contact' },
 ]
