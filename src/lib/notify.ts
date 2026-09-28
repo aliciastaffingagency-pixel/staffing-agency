@@ -66,6 +66,26 @@ export async function sendSms(to: string | null | undefined, message: string) {
   }
 }
 
+// Expo push to the mobile app (no key needed; invalid tokens are pruned).
+export async function sendPush(userIds: string[], title: string, body: string, link?: string | null) {
+  if (!userIds.length) return
+  const admin = createAdminClient()
+  const { data: tokens } = await admin.from('push_tokens').select('token').in('user_id', userIds)
+  if (!tokens?.length) return
+  try {
+    const res = await fetch('https://exp.host/--/api/v2/push/send', {
+      method: 'POST',
+      headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+      body: JSON.stringify(tokens.map((t) => ({ to: t.token, sound: 'default', title, body, data: link ? { link } : {} }))),
+    })
+    const json = (await res.json().catch(() => null)) as { data?: { status: string; details?: { error?: string } }[] } | null
+    const dead = (json?.data ?? []).flatMap((r, i) => (r.details?.error === 'DeviceNotRegistered' ? [tokens[i].token] : []))
+    if (dead.length) await admin.from('push_tokens').delete().in('token', dead)
+  } catch (e) {
+    console.error('expo push error', e)
+  }
+}
+
 // ---------------------------------------------------------------------------
 // In-app notification + optional email/SMS.
 // ---------------------------------------------------------------------------
@@ -99,6 +119,7 @@ async function deliver(input: NotifyInput & { sms?: boolean }) {
   if (input.userId) {
     const { data: profile } = await admin.from('profiles').select('email, phone').eq('id', input.userId).maybeSingle()
     await Promise.all([
+      sendPush([input.userId], subject, input.message, input.link),
       sendEmail(profile?.email, subject, input.message, input.link),
       input.sms ? sendSms(profile?.phone, `${input.message}${input.link ? ` ${SITE()}${input.link}` : ''}`) : null,
     ])
@@ -106,10 +127,11 @@ async function deliver(input: NotifyInput & { sms?: boolean }) {
     // Agency owner: email the agency inbox (plus every admin account).
     const [{ data: agency }, { data: admins }] = await Promise.all([
       admin.from('agencies').select('email, phone').eq('id', input.agencyId).single(),
-      admin.from('profiles').select('email').eq('agency_id', input.agencyId).eq('role', 'super_admin'),
+      admin.from('profiles').select('id, email').eq('agency_id', input.agencyId).eq('role', 'super_admin'),
     ])
     const emails = new Set([agency?.email, ...(admins ?? []).map((a) => a.email)].filter(Boolean) as string[])
     await Promise.all([
+      sendPush((admins ?? []).map((a) => a.id), subject, input.message, input.link),
       ...[...emails].map((e) => sendEmail(e, subject, input.message, input.link)),
       input.sms ? sendSms(agency?.phone, input.message) : null,
     ])

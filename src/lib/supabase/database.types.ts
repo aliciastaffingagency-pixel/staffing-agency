@@ -931,6 +931,33 @@ export type Database = {
           }
         ]
       }
+      push_tokens: {
+        Row: {
+          id: string
+          user_id: string
+          token: string
+          platform: string | null
+          created_at: string
+          last_seen_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          token: string
+          platform?: string | null
+          created_at?: string
+          last_seen_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          token?: string
+          platform?: string | null
+          created_at?: string
+          last_seen_at?: string
+        }
+        Relationships: []
+      }
       ratings: {
         Row: {
           id: string

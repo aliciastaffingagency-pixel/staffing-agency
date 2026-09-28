@@ -1,0 +1,37 @@
+// Brand palette from the Alicia Staffing Agency flyer (matches the website).
+export const Brand = {
+  magenta: '#D61F7A',
+  magentaDark: '#A8155E',
+  magentaSoft: '#FDF1F6',
+  navy: '#1C1F4A',
+  navySoft: '#4D5896',
+  navyMuted: '#7F89BF',
+  gold: '#D4A43A',
+  goldSoft: '#FBF1D9',
+  cream: '#FFF8F1',
+  white: '#FFFFFF',
+  border: '#F7C0DA',
+  line: '#EEF0F8',
+  green: '#047857',
+  greenSoft: '#ECFDF5',
+  red: '#B91C1C',
+  redSoft: '#FEF2F2',
+}
+
+export const STATUS_COLORS: Record<string, { bg: string; fg: string }> = {
+  pending: { bg: Brand.goldSoft, fg: '#8A6620' },
+  processing: { bg: Brand.goldSoft, fg: '#8A6620' },
+  matched: { bg: Brand.line, fg: Brand.navySoft },
+  sent: { bg: Brand.magentaSoft, fg: Brand.magentaDark },
+  contracted: { bg: Brand.magentaSoft, fg: Brand.magentaDark },
+  client_signed: { bg: Brand.magentaSoft, fg: Brand.magentaDark },
+  fully_signed: { bg: Brand.magentaSoft, fg: Brand.magentaDark },
+  active: { bg: Brand.greenSoft, fg: Brand.green },
+  paid: { bg: Brand.greenSoft, fg: Brand.green },
+  open: { bg: Brand.goldSoft, fg: '#8A6620' },
+  resolved: { bg: Brand.line, fg: Brand.navySoft },
+  completed: { bg: Brand.line, fg: Brand.navySoft },
+  ended: { bg: Brand.line, fg: Brand.navySoft },
+  cancelled: { bg: Brand.redSoft, fg: Brand.red },
+  failed: { bg: Brand.redSoft, fg: Brand.red },
+}
