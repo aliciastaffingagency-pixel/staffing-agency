@@ -40,7 +40,7 @@ test('mobile API: auth required, booking, push token, conversation, smart match'
   const { count } = await service.from('messages').select('id', { count: 'exact', head: true }).eq('thread_id', threadId)
   expect(count).toBe(2)
 
-  const match = await request.post('/api/match', { data: { query: 'A house help in Westlands, live-out' } })
+  const match = await request.post('/api/match', { data: { query: `A house help in Westlands, live-out ref ${tag}` } })
   expect(match.status()).toBe(200)
   expect(await match.json()).toHaveProperty('summary')
 

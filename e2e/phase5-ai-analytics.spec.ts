@@ -18,7 +18,7 @@ test('smart match ranks the right person from a plain-language request', async (
 
   const page = await browser.newPage()
   await page.goto('/match')
-  await page.getByLabel('Describe who you need, in your own words').fill('Someone to cook and help with two toddlers, live-in, Kilimani, around 15,000')
+  await page.getByLabel('Describe who you need, in your own words').fill(`Someone to cook and help with two toddlers, live-in, Kilimani, around 15,000 ref ${tag}`)
   await page.getByRole('button', { name: 'Find my matches' }).click()
   // Other suites may add equally good candidates, so assert relative order, not absolute rank.
   const results = page.locator('ol > li')

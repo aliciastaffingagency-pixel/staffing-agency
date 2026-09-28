@@ -10,6 +10,7 @@ The agency owner lists vetted staff. Clients (households or businesses) use it t
 
 - **Brand:** taken from the client's flyer (`public/brand/flyer.jpg`). The colours are magenta `#D61F7A`, navy `#1C1F4A` and gold `#D4A43A` on cream. It uses a crown and heart motif, Poppins for text, and Dancing Script for script accents.
 - **Contact:** +254 726 407 535 (call and WhatsApp), aliciastaffingagency@gmail.com.
+- **Live:** https://staffing-agency-beta.vercel.app (Vercel project `staffing-agency`, team "Alicia agency"). Every push to `main` deploys to production automatically.
 - **Staff roles are not hardcoded.** They live in the `staff_categories` table, and the owner edits them. The icon picker list is in `src/components/category-icon.tsx`.
 
 ## Stack
@@ -48,7 +49,7 @@ Secrets are in `.env.local`, which git ignores. `.env.example` lists every varia
 
 ## Accounts
 
-- **Owner / super_admin:** `aliciastaffingagency@gmail.com`. It was created with a one-time password that was shared in chat. **Change it after the first login.** Run `node scripts/create-admin.mjs <email>` to add or promote another admin.
+- **Owner / super_admin:** `aliciastaffingagency@gmail.com`. On 2026-09-28 the password was set to one the owner chose in chat, and live sign-in was verified. **Before real clients arrive, change it to a long, unique password** (Supabase → Authentication → Users). Never commit it. Run `node scripts/create-admin.mjs <email>` to add or promote another admin.
 - **Roles** are stored in `profiles.role` (`super_admin` | `staff` | `client`). Every signup becomes a `client` through the `on_auth_user_created` trigger. Any role in signup metadata is ignored, and the RLS tests confirm this. Only the service role can grant `super_admin` or `staff`.
 
 ## Data model (see `supabase/migrations/`)
@@ -163,7 +164,8 @@ The design is **multi-tenant ready:** every business table has an `agency_id`, a
 - [ ] **Owner:** deploy to Vercel and add keys, following `docs/DEPLOYMENT.md`. Deployment needs your Vercel login and domain.
 
 ## Testing notes
-- The RLS script and e2e tests run against the **live** Supabase project. They create temporary users (`e2e-…@example.test`, `rls-…@example.test`) and records tagged with a run tag: one digit plus five hex characters, e.g. `Grace Wanjiru 3fa9c1`. Teardown removes them, and each run also sweeps anything an interrupted earlier run left behind. Real names never end in a digit-led tag, so real data isn't touched.
+- The RLS script and e2e tests run against the **live** Supabase project. They create temporary users (`e2e-…@example.test`, `rls-…@example.test`) and records tagged with a run tag: a digit, a letter a–f, then four hex characters, e.g. `Grace Wanjiru 3fa9c1`. Teardown removes all of it: users, bookings, contracts, payments, reviews, vacancies, applications, uploaded files, owner notifications and search-log rows. Each run also sweeps anything an interrupted earlier run left behind. Real names and messages never contain such a token, so real data isn't touched. The audit log is intentionally never edited.
+- Pre-launch test clutter (notifications, searches, files) was cleared from the live database on 2026-09-28.
 - Once real clients are on the platform, create a separate Supabase **staging** project for tests. Point a copy of `.env.local` at it and run `npm run db:push` there first.
 - The e2e suite needs the dev server on port 3100 (`npm run dev -- -p 3100`) and `MPESA_ENV=simulate` in `.env.local`, which is local only.
 
@@ -176,7 +178,7 @@ The design is **multi-tenant ready:** every business table has an `agency_id`, a
 ## Open items for the owner
 
 1. **Supabase Auth settings** (Dashboard → Authentication):
-   - **URL Configuration:** set the Site URL to the live domain once deployed. Add `http://localhost:3000/**` and the live domain `/**` to the Redirect URLs.
+   - **URL Configuration:** set **Site URL** to `https://staffing-agency-beta.vercel.app` (or your custom domain later). Add these **Redirect URLs**: `https://staffing-agency-beta.vercel.app/**`, `http://localhost:3000/**` and `http://localhost:3100/**`. Without this, confirmation and login emails send people to the wrong address.
    - **Email:** Supabase's built-in email sender is heavily rate-limited, and on new projects it may only deliver to team members. Until custom SMTP is set up (Resend, Phase 3), either turn off "Confirm email" for testing or expect confirmation emails not to arrive.
    - **Phone OTP login:** needs an SMS provider. Africa's Talking isn't built in; it needs a "Send SMS" auth hook (planned).
 2. **Marketing numbers:** the animated counters ("500+ staff placed", etc.) only appear once real figures are saved in `agencies.settings.stats`, e.g. `[{"label":"Staff placed","value":500,"suffix":"+"}]`. We don't publish invented numbers.

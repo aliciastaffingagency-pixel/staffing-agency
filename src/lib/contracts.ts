@@ -16,7 +16,7 @@ export async function advanceContract(contractId: string) {
   const admin = createAdminClient()
   const { data: c } = await admin
     .from('contracts')
-    .select('id, agency_id, status, amount_due, client_signed_at, admin_signed_at, pdf_url, booking_request_id, booking_requests(id, client_id, staff_id, status)')
+    .select('id, agency_id, status, amount_due, client_signed_at, admin_signed_at, pdf_url, booking_request_id, booking_requests(id, client_id, staff_id, status, clients(name), staff_profiles(full_name))')
     .eq('id', contractId)
     .single()
   if (!c || c.status === 'cancelled' || c.status === 'ended' || !c.booking_requests) return null
@@ -62,7 +62,7 @@ export async function advanceContract(contractId: string) {
       agencyId: c.agency_id,
       role: 'super_admin',
       type: 'booking_update',
-      message: 'A placement is now active (contract signed by both sides and paid).',
+      message: `${booking.staff_profiles?.full_name ?? 'A staff member'}'s placement with ${booking.clients?.name ?? 'a client'} is now active (signed by both sides and paid).`,
       link: `/admin/bookings/${booking.id}`,
     })
   }
