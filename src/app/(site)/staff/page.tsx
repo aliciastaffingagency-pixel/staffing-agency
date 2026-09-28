@@ -8,7 +8,7 @@ import { buttonClass } from '@/components/ui/button'
 import { WhatsAppIcon } from '@/components/icons'
 import { getAgency, getCategories, whatsappLink } from '@/lib/agency'
 import { AREA_NAMES } from '@/lib/areas'
-import { createClient } from '@/lib/supabase/server'
+import { createPublicClient } from '@/lib/supabase/public'
 
 export const metadata: Metadata = {
   title: 'Find staff',
@@ -38,7 +38,7 @@ export default async function StaffCatalogPage({ searchParams }: PageProps<'/sta
   }
 
   const [agency, categories] = await Promise.all([getAgency(), getCategories()])
-  const supabase = await createClient()
+  const supabase = createPublicClient()
   const clean = (s: string) => s.replace(/[%,()*]/g, ' ')
 
   let query = supabase.from('staff_catalog').select(STAFF_CARD_COLUMNS).eq('agency_id', agency.id)

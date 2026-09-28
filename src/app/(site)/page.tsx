@@ -4,10 +4,13 @@ import { HowItWorks, SectionHeading, ServicesSection, StatsBand, ValuesStrip, Wh
 import { TestimonialCarousel, type Testimonial } from '@/components/landing/testimonials'
 import { ButtonLink } from '@/components/ui/button'
 import { getAgency, getCategories, whatsappLink } from '@/lib/agency'
-import { createClient } from '@/lib/supabase/server'
+import { createPublicClient } from '@/lib/supabase/public'
+
+// Public page: served from the CDN, refreshed every 5 minutes and immediately after admin changes.
+export const revalidate = 300
 
 async function getTestimonials(agencyId: string): Promise<Testimonial[]> {
-  const supabase = await createClient()
+  const supabase = createPublicClient()
   const { data } = await supabase
     .from('testimonials')
     .select('id, stars, comment, client_first_name, client_area, category_name')

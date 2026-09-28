@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { cache } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -8,17 +9,25 @@ import { StaffBadges } from '@/components/staff/staff-card'
 import { buttonClass } from '@/components/ui/button'
 import { WhatsAppIcon } from '@/components/icons'
 import { getAgency, whatsappLink } from '@/lib/agency'
-import { createClient } from '@/lib/supabase/server'
+import { createPublicClient } from '@/lib/supabase/public'
 import { AVAILABILITY_LABEL, formatDate, formatKes, LIVE_LABEL } from '@/lib/utils'
 import { StaffCta } from './staff-cta'
 
-async function getStaff(id: string) {
+// Public page: served from the CDN, refreshed every 5 minutes and immediately after admin changes.
+export const revalidate = 300
+
+// No pages are built ahead of time; each one is rendered on its first visit and then cached (ISR).
+export async function generateStaticParams() {
+  return []
+}
+
+const getStaff = cache(async (id: string) => {
   if (!/^[0-9a-f-]{36}$/i.test(id)) return null
   const agency = await getAgency()
-  const supabase = await createClient()
+  const supabase = createPublicClient()
   const { data } = await supabase.from('staff_catalog').select('*').eq('id', id).eq('agency_id', agency.id).maybeSingle()
   return data
-}
+})
 
 export async function generateMetadata({ params }: PageProps<'/staff/[id]'>): Promise<Metadata> {
   const s = await getStaff((await params).id)
@@ -59,7 +68,7 @@ export default async function StaffProfilePage({ params }: PageProps<'/staff/[id
   const [agency, s] = await Promise.all([getAgency(), getStaff(id)])
   if (!s || !s.id) notFound()
 
-  const supabase = await createClient()
+  const supabase = createPublicClient()
   const { data: reviews } = await supabase
     .from('staff_reviews')
     .select('id, stars, comment, client_first_name, client_area, created_at')

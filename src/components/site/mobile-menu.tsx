@@ -5,19 +5,19 @@ import { Menu, Phone, X } from 'lucide-react'
 import { useState } from 'react'
 import { ButtonLink, buttonClass } from '@/components/ui/button'
 import { WhatsAppIcon } from '@/components/icons'
+import { useSignedIn } from './auth-state'
 
 export function MobileMenu({
   links,
-  dashboardHref,
   phone,
   whatsapp,
 }: {
   links: { href: string; label: string }[]
-  dashboardHref: string | null
   phone: string
   whatsapp: string
 }) {
   const [open, setOpen] = useState(false)
+  const dashboardHref = useSignedIn() ? '/dashboard' : null
   const close = () => setOpen(false)
 
   return (

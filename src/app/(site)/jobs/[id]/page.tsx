@@ -5,14 +5,22 @@ import { ArrowLeft, CalendarClock, FileText, Home, MapPin, Users, Wallet } from 
 import { Reveal } from '@/components/motion'
 import { getAgency } from '@/lib/agency'
 import { EMPLOYMENT_LABEL, payRange } from '@/lib/jobs'
-import { createClient } from '@/lib/supabase/server'
+import { createPublicClient } from '@/lib/supabase/public'
 import { formatDate, LIVE_LABEL } from '@/lib/utils'
 import { ApplicationForm } from '../application-form'
+
+// Public page: served from the CDN, refreshed every 5 minutes and immediately after admin changes.
+export const revalidate = 300
+
+// No pages are built ahead of time; each one is rendered on its first visit and then cached (ISR).
+export async function generateStaticParams() {
+  return []
+}
 
 async function getVacancy(id: string) {
   if (!/^[0-9a-f-]{36}$/i.test(id)) return null
   const agency = await getAgency()
-  const supabase = await createClient()
+  const supabase = createPublicClient()
   // RLS only returns open, unexpired vacancies to the public.
   const { data } = await supabase
     .from('vacancies')

@@ -14,8 +14,8 @@ import { formatKes } from '@/lib/utils'
 
 const refresh = (bookingId: string) => {
   revalidatePath(`/admin/bookings/${bookingId}`)
-  revalidatePath('/admin', 'layout')
-  revalidatePath('/account', 'layout')
+  // Placing or freeing staff changes their availability on the public pages.
+  revalidatePath('/', 'layout')
 }
 
 const money = (label: string) =>

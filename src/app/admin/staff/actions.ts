@@ -94,7 +94,7 @@ export async function saveStaff(_prev: FormState, formData: FormData): Promise<F
     if (error) return { error: error.message }
     if (current.vetting_status === 'rejected' && !vetting_rejected) await recomputeBadges(id)
     revalidatePath('/admin/staff', 'layout')
-    revalidatePath(`/staff/${id}`)
+    revalidatePath('/', 'layout')
     return { message: 'Profile saved.' }
   }
 
@@ -105,6 +105,7 @@ export async function saveStaff(_prev: FormState, formData: FormData): Promise<F
     .single()
   if (error) return { error: error.message }
   revalidatePath('/admin/staff', 'layout')
+  revalidatePath('/', 'layout')
   redirect(`/admin/staff/${created.id}?created=1`)
 }
 
@@ -122,7 +123,7 @@ export async function setStaffActive(formData: FormData) {
   const supabase = await createClient()
   await supabase.from('staff_profiles').update({ is_active: formData.get('active') === 'true' }).eq('id', id)
   revalidatePath('/admin/staff', 'layout')
-  revalidatePath(`/staff/${id}`)
+  revalidatePath('/', 'layout')
 }
 
 const CHECKS = ['id_verification', 'reference_check', 'background_check', 'training'] as const
@@ -163,7 +164,7 @@ export async function saveVettingCheck(_prev: FormState, formData: FormData): Pr
         )
   if (error) return { error: error.message }
   revalidatePath(`/admin/staff/${staff_id}`)
-  revalidatePath(`/staff/${staff_id}`)
+  revalidatePath('/', 'layout')
   return { message: 'Vetting record updated. Badges refreshed.' }
 }
 

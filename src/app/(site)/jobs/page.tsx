@@ -6,7 +6,7 @@ import { HoverLift, Reveal, Stagger, StaggerItem } from '@/components/motion'
 import { ButtonLink } from '@/components/ui/button'
 import { getAgency } from '@/lib/agency'
 import { EMPLOYMENT_LABEL, payRange } from '@/lib/jobs'
-import { createClient } from '@/lib/supabase/server'
+import { createPublicClient } from '@/lib/supabase/public'
 import { formatDate, LIVE_LABEL } from '@/lib/utils'
 
 export const metadata: Metadata = {
@@ -14,9 +14,12 @@ export const metadata: Metadata = {
   description: 'Open jobs for house helps, nannies, cooks, drivers, gardeners, guards and more. Apply online and upload your documents.',
 }
 
+// Public page: served from the CDN, refreshed every 5 minutes and immediately after admin changes.
+export const revalidate = 300
+
 export default async function JobsPage() {
   const agency = await getAgency()
-  const supabase = await createClient()
+  const supabase = createPublicClient()
   const { data: vacancies } = await supabase
     .from('vacancies')
     .select('id, title, location_text, employment_type, live_arrangement, pay_min, pay_max, pay_period, positions, closes_on, published_at, staff_categories(name)')

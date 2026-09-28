@@ -1,6 +1,6 @@
 import 'server-only'
 import { cache } from 'react'
-import { createClient } from '@/lib/supabase/server'
+import { createPublicClient } from '@/lib/supabase/public'
 import type { Json, Tables } from '@/lib/supabase/database.types'
 
 export const AGENCY_SLUG = process.env.NEXT_PUBLIC_AGENCY_SLUG ?? 'alicia'
@@ -16,7 +16,7 @@ export type AgencySettings = {
 export type Agency = Omit<Tables<'agencies'>, 'settings'> & { settings: AgencySettings }
 
 export const getAgency = cache(async (): Promise<Agency> => {
-  const supabase = await createClient()
+  const supabase = createPublicClient()
   const { data, error } = await supabase.from('agencies').select('*').eq('slug', AGENCY_SLUG).single()
   if (error || !data) throw new Error(`Agency "${AGENCY_SLUG}" not found: ${error?.message}`)
   return { ...data, settings: (data.settings ?? {}) as AgencySettings }
@@ -24,7 +24,7 @@ export const getAgency = cache(async (): Promise<Agency> => {
 
 export const getCategories = cache(async () => {
   const agency = await getAgency()
-  const supabase = await createClient()
+  const supabase = createPublicClient()
   const { data, error } = await supabase
     .from('staff_categories')
     .select('id, name, slug, description, icon, image_url, sort_order')

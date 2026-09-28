@@ -8,7 +8,15 @@ import { StaffCard, STAFF_CARD_COLUMNS } from '@/components/staff/staff-card'
 import { buttonClass, ButtonLink } from '@/components/ui/button'
 import { WhatsAppIcon } from '@/components/icons'
 import { getAgency, getCategories, whatsappLink } from '@/lib/agency'
-import { createClient } from '@/lib/supabase/server'
+import { createPublicClient } from '@/lib/supabase/public'
+
+// Public page: served from the CDN, refreshed every 5 minutes and immediately after admin changes.
+export const revalidate = 300
+
+// No pages are built ahead of time; each one is rendered on its first visit and then cached (ISR).
+export async function generateStaticParams() {
+  return []
+}
 
 async function getCategory(slug: string) {
   const categories = await getCategories()
@@ -26,7 +34,7 @@ export default async function CategoryPage({ params }: PageProps<'/services/[slu
   const [agency, category] = await Promise.all([getAgency(), getCategory(slug)])
   if (!category) notFound()
 
-  const supabase = await createClient()
+  const supabase = createPublicClient()
   const { data: staff } = await supabase
     .from('staff_catalog')
     .select(STAFF_CARD_COLUMNS)

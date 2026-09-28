@@ -7,6 +7,9 @@ export const metadata: Metadata = {
   description: 'Browse every type of home and business staff we place — vetted, trained and ready to serve.',
 }
 
+// Public page: served from the CDN, refreshed every 5 minutes and immediately after admin changes.
+export const revalidate = 300
+
 export default async function ServicesPage() {
   const categories = await getCategories()
   return (

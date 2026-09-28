@@ -1,9 +1,8 @@
 import { Phone } from 'lucide-react'
 import { Logo } from '@/components/brand/logo'
-import { ButtonLink } from '@/components/ui/button'
 import { WhatsAppIcon } from '@/components/icons'
 import { formatPhone, getAgency, whatsappLink } from '@/lib/agency'
-import { getSession, HOME_FOR_ROLE } from '@/lib/auth'
+import { HeaderAuth } from './auth-state'
 import { MobileMenu } from './mobile-menu'
 
 export const NAV_LINKS = [
@@ -16,8 +15,7 @@ export const NAV_LINKS = [
 ]
 
 export async function SiteHeader() {
-  const [agency, session] = await Promise.all([getAgency(), getSession()])
-  const dashboardHref = session ? HOME_FOR_ROLE[session.role] : null
+  const agency = await getAgency()
 
   return (
     <header className="sticky top-0 z-40">
@@ -50,17 +48,10 @@ export async function SiteHeader() {
           </nav>
 
           <div className="hidden items-center gap-2 lg:flex">
-            {dashboardHref ? (
-              <ButtonLink href={dashboardHref} variant="navy" size="sm">My dashboard</ButtonLink>
-            ) : (
-              <>
-                <ButtonLink href="/login" variant="ghost" size="sm">Log in</ButtonLink>
-                <ButtonLink href="/signup" size="sm">Get started</ButtonLink>
-              </>
-            )}
+            <HeaderAuth />
           </div>
 
-          <MobileMenu links={NAV_LINKS} dashboardHref={dashboardHref} phone={agency.phone ?? ''} whatsapp={whatsappLink(agency)} />
+          <MobileMenu links={NAV_LINKS} phone={agency.phone ?? ''} whatsapp={whatsappLink(agency)} />
         </div>
       </div>
     </header>

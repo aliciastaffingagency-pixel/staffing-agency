@@ -6,5 +6,7 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|icon.svg|brand/|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
+  // Only where a signed-in session is read on the server. Public pages check sign-in in the
+  // browser, so they can be served straight from the CDN without running this first.
+  matcher: ['/admin/:path*', '/account/:path*', '/staff-portal/:path*', '/dashboard', '/book', '/reset-password'],
 }
