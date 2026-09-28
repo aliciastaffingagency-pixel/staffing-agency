@@ -20,11 +20,17 @@ test('smart match ranks the right person from a plain-language request', async (
   await page.goto('/match')
   await page.getByLabel('Describe who you need, in your own words').fill('Someone to cook and help with two toddlers, live-in, Kilimani, around 15,000')
   await page.getByRole('button', { name: 'Find my matches' }).click()
+  // Other suites may add equally good candidates, so assert relative order, not absolute rank.
   const results = page.locator('ol > li')
-  await expect(results.first()).toContainText(`Near Nanny ${tag}`, { timeout: 60_000 })
-  await expect(results.first()).toContainText(/near Kilimani|Kilimani/i)
+  const near = results.filter({ hasText: `Near Nanny ${tag}` })
+  await expect(near).toHaveCount(1, { timeout: 60_000 })
+  await expect(near).toContainText(/near Kilimani/i)
+  const names = await results.allInnerTexts()
+  const nearRank = names.findIndex((t) => t.includes(`Near Nanny ${tag}`))
+  const farRank = names.findIndex((t) => t.includes(`Far Nanny ${tag}`))
+  expect(farRank === -1 || nearRank < farRank).toBe(true) // closer, live-in, in budget ranks higher
   await expect(page.getByText(`Driver ${tag}`)).toHaveCount(0) // wrong role never shown
-  await expect(results.first().getByRole('link', { name: 'Request Near' })).toHaveAttribute('href', /\/book\?staff=/)
+  await expect(near.getByRole('link', { name: 'Request Near' })).toHaveAttribute('href', /\/book\?staff=/)
 })
 
 test('concierge answers from real facts and captures a callback lead', async ({ browser }) => {

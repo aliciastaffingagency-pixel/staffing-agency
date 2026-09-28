@@ -23,19 +23,20 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       userName={session.full_name ?? session.email ?? 'Admin'}
       headerExtra={<Notifications />}
       roleLabel="Agency owner"
+      layout="sidebar"
       links={[
         { href: '/admin', label: 'Overview' },
-        { href: '/admin/bookings', label: 'Bookings', count: bookings.count ?? 0 },
-        { href: '/admin/messages', label: 'Messages', count: unreadThreads },
-        { href: '/admin/moderation', label: 'Reviews & requests', count: (reviews.count ?? 0) + (claims.count ?? 0) },
-        { href: '/admin/payments', label: 'Payments' },
-        { href: '/admin/analytics', label: 'Analytics' },
-        { href: '/admin/leads', label: 'Leads', count: leads.count ?? 0 },
-        { href: '/admin/staff', label: 'Staff' },
-        { href: '/admin/categories', label: 'Categories' },
-        { href: '/admin/jobs', label: 'Vacancies' },
-        { href: '/admin/applications', label: 'Applications', count: apps.count ?? 0 },
-        { href: '/admin/settings', label: 'Settings' },
+        { href: '/admin/bookings', label: 'Bookings', count: bookings.count ?? 0, group: 'Clients' },
+        { href: '/admin/messages', label: 'Messages', count: unreadThreads, group: 'Clients' },
+        { href: '/admin/moderation', label: 'Reviews & requests', count: (reviews.count ?? 0) + (claims.count ?? 0), group: 'Clients' },
+        { href: '/admin/leads', label: 'Leads', count: leads.count ?? 0, group: 'Clients' },
+        { href: '/admin/staff', label: 'Staff', group: 'Staffing' },
+        { href: '/admin/categories', label: 'Categories', group: 'Staffing' },
+        { href: '/admin/jobs', label: 'Vacancies', group: 'Staffing' },
+        { href: '/admin/applications', label: 'Applications', count: apps.count ?? 0, group: 'Staffing' },
+        { href: '/admin/payments', label: 'Payments', group: 'Business' },
+        { href: '/admin/analytics', label: 'Analytics', group: 'Business' },
+        { href: '/admin/settings', label: 'Settings', group: 'Business' },
       ]}
     >
       {children}

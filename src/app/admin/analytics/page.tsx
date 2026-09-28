@@ -5,7 +5,7 @@ import { BarList, ColumnChart, type BarDatum } from '@/components/charts/bar-lis
 import { DemandMap } from '@/components/map/demand-map'
 import type { DemandPoint } from '@/components/map/demand-map-inner'
 import { EmptyState, PageHeader, Panel, StatCard } from '@/components/portal/portal-shell'
-import { getAgency } from '@/lib/agency'
+import { getAgency, getCategories } from '@/lib/agency'
 import { matchArea } from '@/lib/areas'
 import { requireRole } from '@/lib/auth'
 import type { TemplateDefaults } from '@/lib/contracts-shared'
@@ -44,8 +44,9 @@ export default async function AnalyticsPage({ searchParams }: PageProps<'/admin/
   const a = session.agency_id
 
   const supabase = await createClient()
-  const [agency, bookings, contracts, payments, queries, threads, topStaff, apps, leads, template] = await Promise.all([
+  const [agency, categories, bookings, contracts, payments, queries, threads, topStaff, apps, leads, template] = await Promise.all([
     getAgency(),
+    getCategories(),
     supabase.from('booking_requests').select('id, status, staff_id, location_text, created_at, staff_categories(name)').eq('agency_id', a).gte('created_at', since),
     supabase.from('contracts').select('id, booking_request_id, status, client_signed_at, starts_on, ended_at, created_at').eq('agency_id', a).gte('created_at', sinceIso(730)),
     supabase.from('payments').select('amount, paid_at').eq('agency_id', a).eq('status', 'paid').gte('paid_at', sixMonthsAgo),
@@ -82,7 +83,8 @@ export default async function AnalyticsPage({ searchParams }: PageProps<'/admin/
 
   // Demand by role (bookings) and unmet searches.
   const byRole = tally(b, (x) => x.staff_categories?.name)
-  const unmetByRole = tally(q.filter((x) => x.results === 0), (x) => x.category_slug?.replaceAll('-', ' ') ?? 'unspecified role')
+  const roleName = new Map(categories.map((cat) => [cat.slug, cat.name]))
+  const unmetByRole = tally(q.filter((x) => x.results === 0), (x) => (x.category_slug ? (roleName.get(x.category_slug) ?? x.category_slug) : 'Role not stated'))
 
   // Demand by area → map points.
   const areaName = (t: string | null) => matchArea(t)?.name ?? (t?.split(',')[0].trim() || null)
@@ -109,7 +111,8 @@ export default async function AnalyticsPage({ searchParams }: PageProps<'/admin/
   // Churn: placements that ended in the range, and how many ended inside the trial.
   const trialDays = ((template.data?.defaults ?? {}) as Partial<TemplateDefaults>).trial_period_days ?? 14
   const ended = c.filter((x) => x.ended_at && x.ended_at >= since)
-  const durations = ended.map((x) => (new Date(x.ended_at!).getTime() - new Date(x.starts_on ?? x.created_at).getTime()) / DAY)
+  // Measured from the agreed start date (else the signing date); never negative.
+  const durations = ended.map((x) => Math.max(0, (new Date(x.ended_at!).getTime() - new Date(x.starts_on ?? x.client_signed_at ?? x.created_at).getTime()) / DAY))
   const earlyExits = durations.filter((d) => d <= trialDays).length
   const avgDays = durations.length ? Math.round(durations.reduce((s, d) => s + d, 0) / durations.length) : null
   const replacements = (threads.data ?? []).filter((t) => t.kind === 'replacement').length

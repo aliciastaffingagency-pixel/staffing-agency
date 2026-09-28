@@ -10,6 +10,7 @@ export function PortalShell({
   roleLabel,
   links,
   headerExtra,
+  layout = 'top',
   children,
 }: {
   title: string
@@ -17,20 +18,23 @@ export function PortalShell({
   roleLabel: string
   links: PortalLink[]
   headerExtra?: React.ReactNode
+  /** 'sidebar' suits portals with many sections (admin); 'top' keeps a single row of links. */
+  layout?: 'top' | 'sidebar'
   children: React.ReactNode
 }) {
+  const sidebar = layout === 'sidebar'
   return (
     <div className="min-h-dvh bg-blush/60">
       <header className="sticky top-0 z-30 border-b border-brand-100 bg-white/90 backdrop-blur">
-        <div className="mx-auto flex min-h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
+        <div className={`mx-auto flex min-h-16 items-center justify-between gap-4 px-4 sm:px-6 ${sidebar ? 'max-w-[90rem]' : 'max-w-7xl'}`}>
           <div className="flex items-center gap-6">
             <Logo className="scale-90" />
-            <PortalNav links={links} label={title} variant="desktop" />
+            {!sidebar && <PortalNav links={links} label={title} variant="desktop" />}
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
             {headerExtra}
-            <span className="hidden text-right text-sm leading-tight sm:block">
-              <span className="block font-semibold text-navy-800">{userName}</span>
+            <span className="hidden max-w-48 text-right text-sm leading-tight sm:block">
+              <span className="block truncate font-semibold text-navy-800">{userName}</span>
               <span className="text-xs text-brand-500">{roleLabel}</span>
             </span>
             <form action="/auth/signout" method="post">
@@ -42,7 +46,18 @@ export function PortalShell({
         </div>
         <PortalNav links={links} label={title} variant="mobile" />
       </header>
-      <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6">{children}</main>
+      {sidebar ? (
+        <div className="mx-auto grid max-w-[90rem] gap-8 px-4 sm:px-6 lg:grid-cols-[13.5rem_minmax(0,1fr)]">
+          <aside className="hidden lg:block">
+            <div className="sticky top-24 py-10">
+              <PortalNav links={links} label={title} variant="sidebar" />
+            </div>
+          </aside>
+          <main className="min-w-0 py-10">{children}</main>
+        </div>
+      ) : (
+        <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6">{children}</main>
+      )}
     </div>
   )
 }

@@ -66,6 +66,7 @@ export function ConciergeWidget() {
 
   return (
     <>
+      {/* Bottom-left on phones so it doesn't stack over forms with the WhatsApp button. */}
       <motion.button
         type="button"
         onClick={() => setOpen((o) => !o)}
@@ -73,7 +74,7 @@ export function ConciergeWidget() {
         animate={{ scale: 1, opacity: 1 }}
         transition={{ delay: 1.5, type: 'spring', stiffness: 260, damping: 18 }}
         whileHover={{ scale: 1.06 }}
-        className="fixed bottom-23 right-5 z-50 grid size-14 place-items-center rounded-full bg-brand-500 text-white shadow-lift"
+        className="fixed bottom-5 left-5 z-50 grid size-14 place-items-center rounded-full bg-brand-500 text-white shadow-lift sm:bottom-23 sm:left-auto sm:right-5"
         aria-label={open ? 'Close chat' : 'Chat with our concierge'}
         aria-expanded={open}
       >
@@ -89,7 +90,7 @@ export function ConciergeWidget() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20 }}
             transition={{ duration: 0.2 }}
-            className="fixed bottom-41 right-4 z-50 flex h-[min(34rem,calc(100dvh-12rem))] w-[min(24rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-3xl border border-brand-100 bg-white shadow-soft"
+            className="fixed bottom-23 left-4 z-50 flex h-[min(34rem,calc(100dvh-8rem))] w-[min(24rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-3xl border border-brand-100 bg-white shadow-soft sm:bottom-41 sm:left-auto sm:right-4 sm:h-[min(34rem,calc(100dvh-12rem))]"
           >
             <div className="bg-gradient-to-r from-brand-500 to-brand-600 px-5 py-4 text-white">
               <p className="font-script text-2xl leading-none">Alicia concierge</p>

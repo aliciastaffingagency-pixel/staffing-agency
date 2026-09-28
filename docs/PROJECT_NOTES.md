@@ -5,7 +5,7 @@ The original product brief is in `docs/BUILD_BRIEF.md` (phases 1–7).
 
 ## What this is
 
-A web platform (mobile app comes in Phase 6) for **Alicia Staffing Agency**, a Kenyan domestic and business staffing agency.
+A web platform plus an Expo mobile app (`mobile/`) for **Alicia Staffing Agency**, a Kenyan domestic and business staffing agency.
 The agency owner lists vetted staff. Clients (households or businesses) use it to browse, book, sign contracts, pay (M-Pesa or card) and rate staff online. Today, competing agencies do all of this by phone.
 
 - **Brand:** taken from the client's flyer (`public/brand/flyer.jpg`). The colours are magenta `#D61F7A`, navy `#1C1F4A` and gold `#D4A43A` on cream. It uses a crown and heart motif, Poppins for text, and Dancing Script for script accents.
@@ -68,6 +68,11 @@ Secrets are in `.env.local`, which git ignores. `.env.example` lists every varia
 | `message_threads`, `messages` | Client ↔ admin chat. Realtime is enabled. |
 | `notifications` | Targeted at a user or a role. Realtime is enabled. |
 | `audit_log` | A trigger writes every change to the key tables. Only admins can read it. |
+| `staff_vetting_checks` | ID, references, background and training checks confirmed by the admin. A trigger derives the three badges and `vetting_status` from them. |
+| `vacancies`, `job_applications` | Jobs board. Applications are written by the server only (rate-limited). Their documents are in the private `applications` bucket. |
+| `leads` | Callback requests captured by the website concierge |
+| `match_queries` | Every Smart match search, including ones with no results. Feeds the analytics. |
+| `push_tokens` | Expo push tokens for the mobile app, one per device |
 
 **Views:**
 - `staff_catalog` is the public-safe staff list. It has no ID documents, rounds locations to about 1 km, and hides pay rates from other staff.
@@ -77,6 +82,7 @@ Secrets are in `.env.local`, which git ignores. `.env.example` lists every varia
 - `staff-photos`: public.
 - `staff-docs`: admin only.
 - `contracts`: admin, plus the owning client.
+- `applications`: admin reads only. Applicants upload through short-lived signed upload URLs.
 
 Object paths must start with `<agency_id>/`. Contract PDFs are stored at `<agency_id>/<client_id>/<file>.pdf`.
 
@@ -130,10 +136,42 @@ The design is **multi-tenant ready:** every business table has an `agency_id`, a
 - [x] `/admin/analytics` (30/90/365 days): conversion funnel, fees by month, demand map (requests + unmatched searches by area), demand by role, **searches that found nobody** (recruiting signal), top-rated staff, retention/churn (placements ended within trial, average length, replacements, disputes)
 - [ ] Optional items not built: GPS shift check-in/out, in-app micro-training, referral programme (see "Ideas" below)
 
-### Phases 6–7
-See `docs/BUILD_BRIEF.md`:
-- Phase 6: Expo mobile app.
-- Phase 7: hardening and deployment.
+### Phase 6 — Mobile app (Expo SDK 57) ✅ (2026-09-28)
+- [x] `mobile/`: Expo Router app. Sign-in and sign-up use `Stack.Protected`. Tabs: Find staff, Smart match, My hires, Messages, Account. Other screens:
+  - staff profile
+  - request (choose a service, then pick an available person or let the agency choose)
+  - booking detail (progress, contract, sign, M-Pesa pay, rate, replacement/issue/extend/end requests)
+  - live chat (Realtime)
+- [x] The session is stored with `expo-sqlite` localStorage, as the Expo Supabase guide recommends. Database types are imported type-only from the web app.
+- [x] Web API for the app. It shares code with the website through `src/lib/services/client-ops.ts` and `src/lib/services/match.ts`, so the web and the app behave identically.
+  - `POST /api/mobile/{bookings|sign|pay|threads|messages|ratings|push-token}`: Bearer = the user's Supabase access token, and RLS applies.
+  - `POST /api/match`
+- [x] Expo push: `push_tokens` table. `notify()` sends Expo pushes alongside in-app, email and SMS notifications, and prunes dead tokens.
+- [x] Verified:
+  - `npx tsc --noEmit`, `npx expo lint`, and `npx expo-doctor` (21/21)
+  - `npx expo export --platform android` bundles
+  - `e2e/phase6-mobile-api.spec.ts` covers auth, booking, push-token registration, a conversation and smart match
+- [ ] **Owner:** run `npx eas-cli@latest init` and a development build to try it on a phone (see `mobile/README.md`)
+
+### Phase 7 — Hardening & deployment ✅ (2026-09-28)
+- [x] Rate limiting on every public or abusable endpoint: applications, uploads, match, concierge, bookings, messages, threads, M-Pesa prompts. zod validation on all inputs.
+- [x] Security headers (`next.config.ts`): HSTS, nosniff, frame DENY, referrer and permissions policies, no `X-Powered-By`.
+- [x] Admin portal uses a grouped sidebar on large screens (Clients / Staffing / Business). Phones keep a scrolling menu.
+- [x] Demo data: `node scripts/seed-demo.mjs` adds 12 vetted staff, 2 vacancies, and a demo client (`demo.client@aliciastaffing.test` / `AliciaDemo#2026`) with six placements over recent months and published reviews. `--remove` deletes only what the script created (everything is owned by `demo-seed@aliciastaffing.test`). **Demo data is currently loaded.** Remove it before real clients arrive.
+- [x] `docs/DEPLOYMENT.md`: Vercel, Supabase URLs and SMTP, M-Pesa, Paystack, Resend, Africa's Talking, and a go-live checklist.
+- [x] Tests: `node scripts/test-rls.mjs` (45 checks) and `npm run e2e` (10 flows) both pass. The production build passes.
+- [ ] **Owner:** deploy to Vercel and add keys, following `docs/DEPLOYMENT.md`. Deployment needs your Vercel login and domain.
+
+## Testing notes
+- The RLS script and e2e tests run against the **live** Supabase project. They create temporary users (`e2e-…@example.test`, `rls-…@example.test`) and records tagged with a run tag: one digit plus five hex characters, e.g. `Grace Wanjiru 3fa9c1`. Teardown removes them, and each run also sweeps anything an interrupted earlier run left behind. Real names never end in a digit-led tag, so real data isn't touched.
+- Once real clients are on the platform, create a separate Supabase **staging** project for tests. Point a copy of `.env.local` at it and run `npm run db:push` there first.
+- The e2e suite needs the dev server on port 3100 (`npm run dev -- -p 3100`) and `MPESA_ENV=simulate` in `.env.local`, which is local only.
+
+## Ideas not built (optional extras from the brief)
+- GPS shift check-in/out for drivers, cleaners and gardeners
+- In-app micro-training modules with completion badges
+- A referral programme, and loyalty tiers for recurring clients
+- Phone-number (OTP) login. This needs an SMS "Send SMS" auth hook with Africa's Talking.
 
 ## Open items for the owner
 
@@ -143,6 +181,7 @@ See `docs/BUILD_BRIEF.md`:
    - **Phone OTP login:** needs an SMS provider. Africa's Talking isn't built in; it needs a "Send SMS" auth hook (planned).
 2. **Marketing numbers:** the animated counters ("500+ staff placed", etc.) only appear once real figures are saved in `agencies.settings.stats`, e.g. `[{"label":"Staff placed","value":500,"suffix":"+"}]`. We don't publish invented numbers.
 3. **Trust badge wording:** check that the copy on the landing page ("National ID confirmed in person", "References called", "Completed our training") matches the real vetting process. It's in `src/components/landing/sections.tsx` (`TRUST`).
-4. **Contract terms:** trial period, notice period and replacement policy are needed for the Phase 3 template.
+4. **Contract terms:** the template uses placeholder terms (14-day trial, 14 days' notice, 2 free replacements within 90 days). Confirm or change them in **Admin → Settings** and save.
+7. **Keys to add when ready** (see `docs/DEPLOYMENT.md`): M-Pesa Daraja, Paystack, Resend, Africa's Talking, and optionally `ANTHROPIC_API_KEY`. Everything works without them in a manual/rules mode.
 5. **Security:** change the database password (the current one is weak and has been shared in chat), then update `DATABASE_URL`.
 6. **Photos:** the hero and service photos are cropped from the flyer (`scripts/crop-flyer.mjs`). The apron in the hero still says "Househelps Bureau". Replace it with real photos when available.

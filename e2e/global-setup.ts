@@ -37,7 +37,8 @@ export default async function globalSetup(config: FullConfig) {
   await db.query('delete from private.rate_limits')
   await db.end()
 
-  const tag = randomBytes(3).toString('hex')
+  // Digit first, so teardown can recognise test data without touching real records.
+  const tag = `${randomBytes(1)[0] % 10}${randomBytes(3).toString('hex').slice(0, 5)}`
   mkdirSync('e2e/.auth', { recursive: true })
 
   const admin = await makeUser('admin', tag)
