@@ -113,9 +113,17 @@ The design is **multi-tenant ready:** every business table has an `agency_id`, a
 - [x] `/admin/settings`: agency details, homepage counters (real figures only), contract template editor
 - [x] e2e: full request → pick staff → match → contract → sign → M-Pesa callback → countersign → active → end flow, plus cross-client isolation
 
-### Phases 4–7
+### Phase 4 — Ratings, messaging, claims, moderation ✅ (2026-09-28)
+- [x] Ratings: clients rate staff (1–5 stars + comment) from an active/ended placement or a confirmed claim; one review per placement; reviews stay private until the owner publishes them (`/admin/moderation`); rating averages update by trigger; published reviews show on staff profiles and in the staff portal
+- [x] Messaging: client ↔ agency conversations with Supabase Realtime (`/account/messages`, `/admin/messages`), unread counts in the nav, resolve/reopen
+- [x] Requests on a placement: replacement, issue/dispute, extend, end contract. Each opens a conversation and alerts the owner (SMS for replacements and disputes)
+- [x] "Staff already working for me" claims (`/account/staff`): the owner confirms against an existing profile or creates a hidden one; confirmation unlocks rating and replacement requests
+- [x] Staff portal: placements (with client name and area) and own published reviews
+- [x] Fixes: thread SELECT policy (RETURNING visibility) and guard trigger so clients can only mark threads read
+- [x] Tests: 45 RLS checks; e2e for rating → moderation → public, replacement request + live two-way chat, claims
+
+### Phases 5–7
 See `docs/BUILD_BRIEF.md`:
-- Phase 4: ratings, messaging and claims.
 - Phase 5: trust features, AI and analytics.
 - Phase 6: Expo mobile app.
 - Phase 7: hardening and deployment.

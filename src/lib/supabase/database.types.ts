@@ -555,6 +555,13 @@ export type Database = {
           subject: string | null
           last_message_at: string
           created_at: string
+          kind: Database['public']['Enums']['thread_kind']
+          status: Database['public']['Enums']['thread_status']
+          resolved_at: string | null
+          staff_id: string | null
+          claim_id: string | null
+          client_last_read_at: string
+          admin_last_read_at: string
         }
         Insert: {
           id?: string
@@ -564,6 +571,13 @@ export type Database = {
           subject?: string | null
           last_message_at?: string
           created_at?: string
+          kind?: Database['public']['Enums']['thread_kind']
+          status?: Database['public']['Enums']['thread_status']
+          resolved_at?: string | null
+          staff_id?: string | null
+          claim_id?: string | null
+          client_last_read_at?: string
+          admin_last_read_at?: string
         }
         Update: {
           id?: string
@@ -573,6 +587,13 @@ export type Database = {
           subject?: string | null
           last_message_at?: string
           created_at?: string
+          kind?: Database['public']['Enums']['thread_kind']
+          status?: Database['public']['Enums']['thread_status']
+          resolved_at?: string | null
+          staff_id?: string | null
+          claim_id?: string | null
+          client_last_read_at?: string
+          admin_last_read_at?: string
         }
         Relationships: [
           {
@@ -590,10 +611,24 @@ export type Database = {
             referencedColumns: ['id']
           },
           {
+            foreignKeyName: 'message_threads_claim_id_fkey'
+            columns: ['claim_id']
+            isOneToOne: false
+            referencedRelation: 'existing_staff_claims'
+            referencedColumns: ['id']
+          },
+          {
             foreignKeyName: 'message_threads_client_id_fkey'
             columns: ['client_id']
             isOneToOne: false
             referencedRelation: 'clients'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'message_threads_staff_id_fkey'
+            columns: ['staff_id']
+            isOneToOne: false
+            referencedRelation: 'staff_profiles'
             referencedColumns: ['id']
           }
         ]
@@ -804,6 +839,7 @@ export type Database = {
           moderated_by: string | null
           moderated_at: string | null
           created_at: string
+          admin_note: string | null
         }
         Insert: {
           id?: string
@@ -818,6 +854,7 @@ export type Database = {
           moderated_by?: string | null
           moderated_at?: string | null
           created_at?: string
+          admin_note?: string | null
         }
         Update: {
           id?: string
@@ -832,6 +869,7 @@ export type Database = {
           moderated_by?: string | null
           moderated_at?: string | null
           created_at?: string
+          admin_note?: string | null
         }
         Relationships: [
           {
@@ -1241,11 +1279,13 @@ export type Database = {
       employment_type: 'full_time' | 'part_time' | 'contract' | 'temporary' | 'casual'
       engagement_preference: 'join_agency' | 'own_terms'
       live_arrangement: 'live_in' | 'live_out' | 'either'
-      notification_type: 'new_request' | 'matched' | 'contract_ready' | 'payment_received' | 'rating_submitted' | 'replacement_requested' | 'dispute_raised' | 'new_application' | 'contract_signed' | 'booking_update'
+      notification_type: 'new_request' | 'matched' | 'contract_ready' | 'payment_received' | 'rating_submitted' | 'replacement_requested' | 'dispute_raised' | 'new_application' | 'contract_signed' | 'booking_update' | 'new_message' | 'claim_update'
       payment_method: 'mpesa' | 'card' | 'cash' | 'bank'
       payment_status: 'pending' | 'processing' | 'paid' | 'failed' | 'refunded'
       rate_period: 'day' | 'month'
       staff_availability: 'available' | 'placed' | 'unavailable'
+      thread_kind: 'general' | 'replacement' | 'dispute' | 'extension' | 'end_request'
+      thread_status: 'open' | 'resolved'
       user_role: 'super_admin' | 'staff' | 'client'
       vacancy_status: 'draft' | 'open' | 'closed' | 'filled'
       vetting_check_type: 'id_verification' | 'reference_check' | 'background_check' | 'training'

@@ -14,6 +14,7 @@ import { mpesaMode, paystackEnabled } from '@/lib/payments'
 import { createClient } from '@/lib/supabase/server'
 import { cn, formatDate, formatKes, LIVE_LABEL } from '@/lib/utils'
 import { cancelMyBooking } from '../../actions'
+import { RatingForm, RequestForm } from '../../care-forms'
 import { PayPanel, SignContractForm } from './client-forms'
 
 export const metadata: Metadata = { title: 'My booking' }
@@ -50,6 +51,8 @@ export default async function ClientBookingPage({ params, searchParams }: PagePr
   const paid = (payments ?? []).filter((p) => p.status === 'paid').reduce((s, p) => s + Number(p.amount), 0)
   const outstanding = Math.max(0, Number(contract?.amount_due ?? 0) - paid)
   const processing = (payments ?? []).some((p) => p.status === 'processing' && isRecent(p.created_at, 3 * 60_000))
+  const placed = contract && ['active', 'ended'].includes(contract.status) && b.staff_id
+  const { data: myRating } = placed ? await supabase.from('ratings').select('id, stars').eq('contract_id', contract.id).maybeSingle() : { data: null }
   const { data: pdf } = contract?.pdf_url ? await supabase.storage.from('contracts').createSignedUrl(contract.pdf_url, 60 * 30) : { data: null }
 
   const reached = [
@@ -177,6 +180,25 @@ export default async function ClientBookingPage({ params, searchParams }: PagePr
             ))}
           </ul>
         </Panel>
+      )}
+
+      {placed && staff?.full_name && (
+        <div className="grid items-start gap-6 md:grid-cols-2">
+          <Panel title={myRating ? 'Your review' : `Rate ${staff.full_name.split(' ')[0]}`}>
+            {myRating ? (
+              <p className="text-sm text-navy-600">You gave {myRating.stars}★. Thank you! Your review will appear once the agency has checked it.</p>
+            ) : (
+              <RatingForm staffId={b.staff_id!} staffName={staff.full_name.split(' ')[0]} contractId={contract.id} />
+            )}
+          </Panel>
+          <Panel title="Need something?">
+            <RequestForm
+              kinds={contract.status === 'active' ? ['replacement', 'dispute', 'extension', 'end_request', 'general'] : ['general', 'dispute']}
+              bookingId={b.id}
+              submitLabel="Send to the agency"
+            />
+          </Panel>
+        </div>
       )}
 
       {['pending', 'matched'].includes(b.status) && (

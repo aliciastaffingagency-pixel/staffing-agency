@@ -128,6 +128,24 @@ try {
   const clientStaffEdit = await a.client.from('staff_profiles').update({ full_name: 'hacked' }).eq('id', staffId).select()
   check('client cannot edit staff', (clientStaffEdit.data ?? []).length === 0)
 
+  // ---- Phase 4: messaging guard + ratings
+  const thread = await a.client.from('message_threads').insert({ agency_id: agencyId, client_id: aClientId, subject: 'Hi', kind: 'general' }).select('id').single()
+  check('client opens a thread', !thread.error, thread.error?.message)
+  const msg = await a.client.from('messages').insert({ thread_id: thread.data?.id, sender_id: a.id, sender_role: 'client', body: 'Hello' })
+  check('client sends a message (thread trigger allowed)', !msg.error, msg.error?.message)
+  const fakeRole = await a.client.from('messages').insert({ thread_id: thread.data?.id, sender_id: a.id, sender_role: 'super_admin', body: 'I am admin' })
+  check('client cannot post as admin', Boolean(fakeRole.error))
+  const resolve = await a.client.from('message_threads').update({ status: 'resolved' }).eq('id', thread.data?.id)
+  check('client cannot resolve threads', Boolean(resolve.error))
+  const markRead = await a.client.from('message_threads').update({ client_last_read_at: new Date().toISOString() }).eq('id', thread.data?.id).select()
+  check('client can mark thread read', markRead.data?.length === 1, markRead.error?.message)
+  const bThread = await b.client.from('messages').select('id').eq('thread_id', thread.data?.id)
+  check("client B cannot read A's messages", (bThread.data ?? []).length === 0)
+  const bPost = await b.client.from('messages').insert({ thread_id: thread.data?.id, sender_id: b.id, sender_role: 'client', body: 'intrude' })
+  check("client B cannot post in A's thread", Boolean(bPost.error))
+  const selfPublish = await a.client.from('ratings').insert({ agency_id: agencyId, client_id: aClientId, staff_id: staffId, stars: 5, is_published: true, claim_id: '00000000-0000-0000-0000-000000000000' })
+  check('client cannot self-publish a rating', Boolean(selfPublish.error))
+
   // ---- Jobs board
   const draft = await admin.client.from('vacancies').insert({ agency_id: agencyId, title: `Draft job ${tag}`, description: 'A draft vacancy for tests', status: 'draft' }).select('id').single()
   const open = await admin.client.from('vacancies').insert({ agency_id: agencyId, title: `Open job ${tag}`, description: 'An open vacancy for tests', status: 'open', required_documents: ['National ID'] }).select('id').single()
