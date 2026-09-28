@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ArrowLeft, FileText, Mail, Phone, UserPlus } from 'lucide-react'
+import { ConfirmDelete } from '@/components/admin/confirm-delete'
 import { PageHeader, Panel, StatusPill } from '@/components/portal/portal-shell'
 import { Button, ButtonLink } from '@/components/ui/button'
 import { WhatsAppIcon } from '@/components/icons'
@@ -9,7 +10,7 @@ import { requireRole } from '@/lib/auth'
 import { ENGAGEMENT_LABEL } from '@/lib/jobs'
 import { createClient } from '@/lib/supabase/server'
 import { formatDate, formatDateTime, formatKes } from '@/lib/utils'
-import { convertToStaff } from '../../jobs/actions'
+import { convertToStaff, removeApplication } from '../../jobs/actions'
 import { ApplicationReviewForm } from './review-form'
 
 export const metadata: Metadata = { title: 'Application' }
@@ -145,6 +146,16 @@ export default async function ApplicationPage({ params }: PageProps<'/admin/appl
               </form>
             )}
           </Panel>
+
+          <ConfirmDelete
+            action={removeApplication}
+            id={app.id}
+            phrase="DELETE"
+            title="Delete this application"
+            button="Delete application"
+            deletes={['The application and every uploaded document', 'Personal details stored in the activity log']}
+            keeps={app.staff_id ? ['The staff profile created from it (delete that separately if needed)'] : undefined}
+          />
         </div>
       </div>
     </div>

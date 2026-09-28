@@ -19,8 +19,10 @@ export async function saveAgency(_prev: FormState, formData: FormData): Promise<
       tagline: z.string().max(160),
       email: z.email('Enter a valid email'),
       service_area_label: z.string().max(80),
+      address: z.string().max(200),
+      odpc_registration: z.string().max(60),
     })
-    .safeParse({ name: s('name'), tagline: s('tagline'), email: s('email'), service_area_label: s('service_area_label') })
+    .safeParse({ name: s('name'), tagline: s('tagline'), email: s('email'), service_area_label: s('service_area_label'), address: s('address'), odpc_registration: s('odpc_registration') })
   if (!parsed.success) return { error: parsed.error.issues[0].message }
   if (!phone || !whatsapp) return { error: 'Enter valid Kenyan phone numbers for phone and WhatsApp' }
 
@@ -34,7 +36,13 @@ export async function saveAgency(_prev: FormState, formData: FormData): Promise<
 
   const supabase = await createClient()
   const { data: agency } = await supabase.from('agencies').select('settings').eq('id', session.agency_id).single()
-  const settings: AgencySettings = { ...((agency?.settings ?? {}) as AgencySettings), service_area_label: parsed.data.service_area_label, stats }
+  const settings: AgencySettings = {
+    ...((agency?.settings ?? {}) as AgencySettings),
+    service_area_label: parsed.data.service_area_label,
+    address: parsed.data.address || undefined,
+    odpc_registration: parsed.data.odpc_registration || undefined,
+    stats,
+  }
 
   const { error } = await supabase
     .from('agencies')
@@ -84,5 +92,8 @@ export async function saveTemplate(_prev: FormState, formData: FormData): Promis
   if (error) return { error: error.message }
   await supabase.from('contract_templates').update({ is_active: false }).eq('agency_id', session.agency_id).neq('version', version)
   revalidatePath('/admin/settings')
+  // The Terms and Refund policy quote the trial, notice and replacement periods.
+  revalidatePath('/terms')
+  revalidatePath('/refunds')
   return { message: `Saved as version ${version}. New contracts use these terms.` }
 }

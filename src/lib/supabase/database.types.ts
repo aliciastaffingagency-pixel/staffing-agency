@@ -174,7 +174,7 @@ export type Database = {
         Row: {
           id: string
           agency_id: string
-          user_id: string
+          user_id: string | null
           name: string | null
           phone: string | null
           email: string | null
@@ -184,11 +184,12 @@ export type Database = {
           kind: Database['public']['Enums']['client_kind']
           created_at: string
           updated_at: string
+          deleted_at: string | null
         }
         Insert: {
           id?: string
           agency_id: string
-          user_id: string
+          user_id?: string | null
           name?: string | null
           phone?: string | null
           email?: string | null
@@ -198,11 +199,12 @@ export type Database = {
           kind?: Database['public']['Enums']['client_kind']
           created_at?: string
           updated_at?: string
+          deleted_at?: string | null
         }
         Update: {
           id?: string
           agency_id?: string
-          user_id?: string
+          user_id?: string | null
           name?: string | null
           phone?: string | null
           email?: string | null
@@ -212,6 +214,7 @@ export type Database = {
           kind?: Database['public']['Enums']['client_kind']
           created_at?: string
           updated_at?: string
+          deleted_at?: string | null
         }
         Relationships: [
           {
@@ -898,6 +901,7 @@ export type Database = {
           avatar_url: string | null
           created_at: string
           updated_at: string
+          terms_accepted_at: string | null
         }
         Insert: {
           id: string
@@ -909,6 +913,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           updated_at?: string
+          terms_accepted_at?: string | null
         }
         Update: {
           id?: string
@@ -920,6 +925,7 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           updated_at?: string
+          terms_accepted_at?: string | null
         }
         Relationships: [
           {
@@ -1123,6 +1129,7 @@ export type Database = {
           created_by: string | null
           created_at: string
           updated_at: string
+          publish_consent_at: string | null
         }
         Insert: {
           id?: string
@@ -1154,6 +1161,7 @@ export type Database = {
           created_by?: string | null
           created_at?: string
           updated_at?: string
+          publish_consent_at?: string | null
         }
         Update: {
           id?: string
@@ -1185,6 +1193,7 @@ export type Database = {
           created_by?: string | null
           created_at?: string
           updated_at?: string
+          publish_consent_at?: string | null
         }
         Relationships: [
           {
@@ -1401,6 +1410,14 @@ export type Database = {
           p_window_seconds: number
         }
         Returns: boolean
+      }
+      redact_audit_entries: {
+        Args: {
+          p_targets: Json
+          p_refs: Json
+          p_reason: string
+        }
+        Returns: number
       }
     }
     Enums: {

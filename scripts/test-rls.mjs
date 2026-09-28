@@ -106,6 +106,8 @@ try {
   }
   const adminAudit = await admin.client.from('audit_log').select('id').gte('created_at', started)
   check('admin reads audit log (category changes recorded)', (adminAudit.data ?? []).length >= 2, adminAudit.error?.message)
+  const redact = await admin.client.rpc('redact_audit_entries', { p_targets: [], p_refs: [], p_reason: 'test' })
+  check('only the server can redact the audit log', Boolean(redact.error))
 
   // ---- Phase 2: staff profiles, derived badges, catalog
   const staff = await admin.client.from('staff_profiles')
@@ -121,6 +123,10 @@ try {
   await admin.client.from('staff_vetting_checks').insert({ agency_id: agencyId, staff_id: staffId, check_type: 'training', confirmed_by: admin.id })
   const afterChecks = await admin.client.from('staff_profiles').select('verified_badge, trained_badge, background_checked_badge, vetting_status').eq('id', staffId).single()
   check('vetting checks drive badges', afterChecks.data?.verified_badge && afterChecks.data?.trained_badge && !afterChecks.data?.background_checked_badge && afterChecks.data?.vetting_status === 'in_review', JSON.stringify(afterChecks.data))
+  const noConsent = await anon.from('staff_catalog').select('id').eq('id', staffId)
+  check('staff stay out of the catalog until their consent is recorded', !noConsent.error && (noConsent.data ?? []).length === 0, noConsent.error?.message)
+  const consent = await admin.client.from('staff_profiles').update({ publish_consent_at: new Date().toISOString() }).eq('id', staffId).select('id')
+  check('admin records publishing consent', consent.data?.length === 1, consent.error?.message)
   const anonCatalog = await anon.from('staff_catalog').select('id, month_rate').eq('id', staffId)
   check('anon sees staff in catalog with rate', anonCatalog.data?.[0]?.month_rate === 15000, anonCatalog.error?.message)
   const clientChecks = await a.client.from('staff_vetting_checks').select('id').eq('staff_id', staffId)
@@ -171,6 +177,8 @@ try {
   await service.from('job_applications').delete().eq('id', app.data?.id)
 } finally {
   for (const id of createdStaff) await service.from('staff_profiles').delete().eq('id', id)
+  // Deleting a login keeps its client record (for signed contracts), so remove those first.
+  if (created.length) await service.from('clients').delete().in('user_id', created)
   for (const id of created) await service.auth.admin.deleteUser(id)
   await service.from('audit_log').delete().gte('created_at', started)
   console.log(`\ncleaned up ${created.length} test users`)

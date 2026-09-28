@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Dancing_Script, Poppins } from 'next/font/google'
+import { AuthLinkHandler } from '@/components/site/auth-link-handler'
+import { CookieNotice } from '@/components/site/cookie-notice'
 import { siteUrl } from '@/lib/site-url'
 import './globals.css'
 
@@ -38,7 +40,11 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" className={`${poppins.variable} ${dancing.variable}`} data-scroll-behavior="smooth">
-      <body className="min-h-dvh font-sans">{children}</body>
+      <body className="min-h-dvh font-sans">
+        <CookieNotice />
+        <AuthLinkHandler />
+        {children}
+      </body>
     </html>
   )
 }

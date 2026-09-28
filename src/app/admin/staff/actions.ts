@@ -6,6 +6,7 @@ import { z } from 'zod'
 import type { FormState } from '@/components/ui/form'
 import { requireRole } from '@/lib/auth'
 import { siteUrl } from '@/lib/site-url'
+import { deleteStaffMember } from '@/lib/services/erasure'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { splitList } from '@/lib/utils'
@@ -40,6 +41,7 @@ const staffSchema = z.object({
     .refine((v) => v === null || /^https:\/\//.test(v), 'Video link must start with https://'),
   id_doc_url: z.string().trim().max(500).transform((v) => v || null),
   is_active: z.boolean(),
+  publish_consent: z.boolean(),
   vetting_rejected: z.boolean(),
 })
 
@@ -63,6 +65,7 @@ function readStaff(formData: FormData) {
     video_url: s('video_url'),
     id_doc_url: s('id_doc_url'),
     is_active: formData.get('is_active') === 'on',
+    publish_consent: formData.get('publish_consent') === 'on',
     vetting_rejected: formData.get('vetting_rejected') === 'on',
   })
 }
@@ -71,7 +74,12 @@ export async function saveStaff(_prev: FormState, formData: FormData): Promise<F
   const session = await requireRole('super_admin')
   const parsed = readStaff(formData)
   if (!parsed.success) return { error: parsed.error.issues[0].message }
-  const { vetting_rejected, ...data } = parsed.data
+  const { vetting_rejected, publish_consent, ...data } = parsed.data
+  // Kenya Data Protection Act: a person's profile is only published with their agreement.
+  if (data.is_active && !publish_consent) {
+    return { error: 'Tick "has agreed to be shown publicly" before publishing, or untick "Show in the public catalog".' }
+  }
+  const now = new Date().toISOString()
 
   // Files must be the ones our uploader put in this agency's storage folders.
   const photoPrefix = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/staff-photos/${session.agency_id}/`
@@ -83,14 +91,15 @@ export async function saveStaff(_prev: FormState, formData: FormData): Promise<F
   const id = String(formData.get('id') ?? '')
 
   if (id) {
-    const { data: current } = await supabase.from('staff_profiles').select('vetting_status').eq('id', id).single()
+    const { data: current } = await supabase.from('staff_profiles').select('vetting_status, publish_consent_at').eq('id', id).single()
     if (!current) return { error: 'Staff profile not found' }
     // "Rejected" is the one vetting status the admin sets by hand; the rest follow the checks.
     let vetting_status = current.vetting_status
     if (vetting_rejected) vetting_status = 'rejected'
     else if (current.vetting_status === 'rejected') vetting_status = 'in_review'
 
-    const { error } = await supabase.from('staff_profiles').update({ ...data, vetting_status }).eq('id', id)
+    const publish_consent_at = publish_consent ? (current.publish_consent_at ?? now) : null
+    const { error } = await supabase.from('staff_profiles').update({ ...data, vetting_status, publish_consent_at }).eq('id', id)
     if (error) return { error: error.message }
     if (current.vetting_status === 'rejected' && !vetting_rejected) await recomputeBadges(id)
     revalidatePath('/admin/staff', 'layout')
@@ -100,7 +109,7 @@ export async function saveStaff(_prev: FormState, formData: FormData): Promise<F
 
   const { data: created, error } = await supabase
     .from('staff_profiles')
-    .insert({ ...data, agency_id: session.agency_id, vetting_status: vetting_rejected ? 'rejected' : 'pending' })
+    .insert({ ...data, agency_id: session.agency_id, vetting_status: vetting_rejected ? 'rejected' : 'pending', publish_consent_at: publish_consent ? now : null })
     .select('id')
     .single()
   if (error) return { error: error.message }
@@ -121,7 +130,13 @@ export async function setStaffActive(formData: FormData) {
   await requireRole('super_admin')
   const id = z.uuid().parse(formData.get('id'))
   const supabase = await createClient()
-  await supabase.from('staff_profiles').update({ is_active: formData.get('active') === 'true' }).eq('id', id)
+  const active = formData.get('active') === 'true'
+  if (active) {
+    // Never publish without recorded consent.
+    const { data: s } = await supabase.from('staff_profiles').select('publish_consent_at').eq('id', id).single()
+    if (!s?.publish_consent_at) return
+  }
+  await supabase.from('staff_profiles').update({ is_active: active }).eq('id', id)
   revalidatePath('/admin/staff', 'layout')
   revalidatePath('/', 'layout')
 }
@@ -198,4 +213,21 @@ export async function grantStaffLogin(_prev: FormState, formData: FormData): Pro
 
   revalidatePath(`/admin/staff/${staff.id}`)
   return { message: `Invitation sent to ${parsed.data.email}. They can log in to see their placements and ratings.` }
+}
+
+// Permanent deletion (see lib/services/erasure.ts for exactly what is removed).
+export async function deleteStaff(_prev: FormState, formData: FormData): Promise<FormState> {
+  const session = await requireRole('super_admin')
+  const id = z.uuid().safeParse(formData.get('id'))
+  if (!id.success) return { error: 'Unknown staff member' }
+  const supabase = await createClient()
+  const { data: staff } = await supabase.from('staff_profiles').select('full_name').eq('id', id.data).maybeSingle()
+  if (!staff) return { error: 'Staff profile not found.' }
+  if (String(formData.get('confirm') ?? '').trim().toLowerCase() !== staff.full_name.trim().toLowerCase()) {
+    return { error: `Type ${staff.full_name} exactly to confirm.` }
+  }
+  const res = await deleteStaffMember(session.agency_id, id.data)
+  if (res.error !== undefined) return { error: res.error }
+  revalidatePath('/', 'layout')
+  redirect(`/admin/staff?deleted=${encodeURIComponent(res.name)}`)
 }

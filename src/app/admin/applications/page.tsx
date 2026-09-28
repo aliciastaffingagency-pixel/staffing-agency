@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { EmptyState, PageHeader, StatusPill } from '@/components/portal/portal-shell'
+import { FormAlert } from '@/components/ui/form'
 import { requireRole } from '@/lib/auth'
 import { APPLICATION_STATUSES, ENGAGEMENT_LABEL } from '@/lib/jobs'
 import { createClient } from '@/lib/supabase/server'
@@ -35,6 +36,8 @@ export default async function ApplicationsPage({ searchParams }: PageProps<'/adm
   return (
     <div className="grid gap-8">
       <PageHeader title="Job applications" description="People applying to work with you, with their documents and preferred terms." />
+
+      {typeof sp.deleted === 'string' && <FormAlert message={`The application from ${sp.deleted} and its documents were deleted.`} />}
 
       <form className="flex flex-wrap gap-2 rounded-3xl border border-brand-100 bg-white p-3">
         <select name="vacancy" defaultValue={vacancy} className="h-10 min-w-48 rounded-full border border-navy-100 px-3 text-sm">

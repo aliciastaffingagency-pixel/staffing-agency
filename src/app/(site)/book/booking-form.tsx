@@ -92,7 +92,11 @@ export function BookingForm({
       <div>
         <SubmitButton size="lg" pending={pending}>Send request</SubmitButton>
       </div>
-      <p className="text-xs text-navy-400">No payment now. We confirm the match with you first, then send a digital contract to sign.</p>
+      <p className="text-xs text-navy-400">
+        No payment now. We confirm the match with you first, then send a digital contract to sign. By sending a request you agree to our{' '}
+        <a href="/terms" target="_blank" className="font-semibold text-brand-600 hover:underline">Terms</a> and{' '}
+        <a href="/privacy" target="_blank" className="font-semibold text-brand-600 hover:underline">Privacy Policy</a>.
+      </p>
     </form>
   )
 }

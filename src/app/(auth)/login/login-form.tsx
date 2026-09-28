@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useActionState, useState } from 'react'
 import { Loader2, Mail } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -33,7 +34,12 @@ export function LoginForm({ next, initialError }: { next: string; initialError?:
         <input type="hidden" name="next" value={next} />
         <Field label="Email" name="email" type="email" autoComplete="email" required defaultValue={pwState.fields?.email} placeholder="you@example.com" />
         {mode === 'password' && (
-          <Field label="Password" name="password" type="password" autoComplete="current-password" required />
+          <div>
+            <Field label="Password" name="password" type="password" autoComplete="current-password" required />
+            <Link href="/forgot-password" className="mt-2 inline-block text-sm font-semibold text-brand-600 hover:underline">
+              Forgot password?
+            </Link>
+          </div>
         )}
         <FormAlert error={state.error} message={state.message} />
         <Button type="submit" size="lg" disabled={pending} className="mt-1 w-full">

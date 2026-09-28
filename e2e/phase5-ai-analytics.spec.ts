@@ -9,10 +9,11 @@ test('smart match ranks the right person from a plain-language request', async (
   const { data: cats } = await service.from('staff_categories').select('id, slug').eq('agency_id', agencyId).in('slug', ['nanny', 'driver'])
   const nanny = cats!.find((c) => c.slug === 'nanny')!.id
   const driver = cats!.find((c) => c.slug === 'driver')!.id
+  const consent = new Date().toISOString()
   const seeded = await service.from('staff_profiles').insert([
-    { agency_id: agencyId, category_id: nanny, full_name: `Near Nanny ${tag}`, location_text: 'Kilimani', live_arrangement: 'live_in', month_rate: 14000, skills: ['Cooking', 'Childcare'], years_experience: 5 },
-    { agency_id: agencyId, category_id: nanny, full_name: `Far Nanny ${tag}`, location_text: 'Thika', live_arrangement: 'live_out', month_rate: 25000, skills: ['Childcare'] },
-    { agency_id: agencyId, category_id: driver, full_name: `Driver ${tag}`, location_text: 'Kilimani', live_arrangement: 'live_out', month_rate: 20000 },
+    { agency_id: agencyId, category_id: nanny, full_name: `Near Nanny ${tag}`, location_text: 'Kilimani', live_arrangement: 'live_in', month_rate: 14000, skills: ['Cooking', 'Childcare'], years_experience: 5, publish_consent_at: consent },
+    { agency_id: agencyId, category_id: nanny, full_name: `Far Nanny ${tag}`, location_text: 'Thika', live_arrangement: 'live_out', month_rate: 25000, skills: ['Childcare'], publish_consent_at: consent },
+    { agency_id: agencyId, category_id: driver, full_name: `Driver ${tag}`, location_text: 'Kilimani', live_arrangement: 'live_out', month_rate: 20000, publish_consent_at: consent },
   ], { defaultToNull: false })
   expect(seeded.error).toBeNull()
 

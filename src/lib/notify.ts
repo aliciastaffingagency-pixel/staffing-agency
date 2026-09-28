@@ -142,5 +142,6 @@ async function deliver(input: NotifyInput & { sms?: boolean }) {
 // Convenience for "tell the client behind this client row".
 export async function notifyClient(clientId: string, n: Omit<NotifyInput, 'userId' | 'role'> & { sms?: boolean }) {
   const { data } = await createAdminClient().from('clients').select('user_id').eq('id', clientId).single()
-  if (data) await notify({ ...n, userId: data.user_id })
+  // A client who deleted their account has no login left to notify.
+  if (data?.user_id) await notify({ ...n, userId: data.user_id })
 }

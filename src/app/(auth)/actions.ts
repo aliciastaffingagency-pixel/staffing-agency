@@ -3,7 +3,9 @@
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import { AGENCY_SLUG } from '@/lib/agency'
+import { createPublicClient } from '@/lib/supabase/public'
 import { createClient } from '@/lib/supabase/server'
+import { rateLimit } from '@/lib/rate-limit'
 import { siteUrl } from '@/lib/site-url'
 import { safeNext } from '@/lib/utils'
 
@@ -59,12 +61,13 @@ const signUpSchema = z.object({
   email,
   password: z.string().min(8, 'Use at least 8 characters for your password').max(72),
   client_kind: z.enum(['household', 'business']),
+  terms: z.literal(true, 'Please agree to the Terms of Service and Privacy Policy'),
 })
 
 export async function signUp(_prev: AuthState, formData: FormData): Promise<AuthState> {
   // Echoed back into the form on error — never includes the password.
   const fields = Object.fromEntries(['full_name', 'phone', 'email', 'client_kind'].map((k) => [k, String(formData.get(k) ?? '')]))
-  const parsed = signUpSchema.safeParse({ ...fields, password: formData.get('password') })
+  const parsed = signUpSchema.safeParse({ ...fields, password: formData.get('password'), terms: formData.get('terms') === 'on' })
   if (!parsed.success) return { error: parsed.error.issues[0].message, fields }
 
   const { password, ...profile } = parsed.data
@@ -77,7 +80,8 @@ export async function signUp(_prev: AuthState, formData: FormData): Promise<Auth
     password,
     options: {
       emailRedirectTo: callbackUrl(next),
-      data: { full_name: profile.full_name, phone, client_kind: profile.client_kind, agency_slug: AGENCY_SLUG },
+      // terms_accepted is recorded as a timestamp on the profile by the sign-up trigger.
+      data: { full_name: profile.full_name, phone, client_kind: profile.client_kind, agency_slug: AGENCY_SLUG, terms_accepted: 'true' },
     },
   })
   if (error) return { error: authError(error.message), fields }
@@ -85,4 +89,35 @@ export async function signUp(_prev: AuthState, formData: FormData): Promise<Auth
   // Email confirmation off → signed in immediately.
   if (data.session) redirect(next)
   return { message: `Almost there! We sent a confirmation link to ${profile.email}. Click it to activate your account.` }
+}
+
+// ---------------------------------------------------------------------------
+// Forgot password
+// ---------------------------------------------------------------------------
+export async function requestPasswordReset(_prev: AuthState, formData: FormData): Promise<AuthState> {
+  const parsed = email.safeParse(formData.get('email'))
+  if (!parsed.success) return { error: parsed.error.issues[0].message }
+  if (!(await rateLimit('password-reset', 5, 900))) return { error: 'Too many attempts. Please wait a few minutes and try again.' }
+
+  // Not the cookie client: a PKCE link would only work in the browser that asked for it.
+  // The mobile app sends the same kind of link.
+  const { error } = await createPublicClient().auth.resetPasswordForEmail(parsed.data, { redirectTo: `${siteUrl()}/reset-password` })
+  if (error && /rate limit/i.test(error.message)) return { error: authError(error.message) }
+  // Same answer whether or not an account exists, so this can't be used to probe for accounts.
+  return { message: `If an account exists for ${parsed.data}, we've emailed you a link to choose a new password. The link works once and expires soon.` }
+}
+
+const newPasswordSchema = z
+  .object({ password: z.string().min(8, 'Use at least 8 characters').max(72), confirm: z.string() })
+  .refine((v) => v.password === v.confirm, { message: "The two passwords don't match" })
+
+export async function setNewPassword(_prev: AuthState, formData: FormData): Promise<AuthState> {
+  const parsed = newPasswordSchema.safeParse({ password: formData.get('password'), confirm: formData.get('confirm') })
+  if (!parsed.success) return { error: parsed.error.issues[0].message }
+  const supabase = await createClient()
+  const { data } = await supabase.auth.getClaims()
+  if (!data?.claims?.sub) return { error: 'Your reset link has expired. Please request a new one.' }
+  const { error } = await supabase.auth.updateUser({ password: parsed.data.password })
+  if (error) return { error: /different|same/i.test(error.message) ? 'Choose a password different from your old one.' : authError(error.message) }
+  redirect('/dashboard')
 }

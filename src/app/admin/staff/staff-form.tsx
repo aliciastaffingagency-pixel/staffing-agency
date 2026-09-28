@@ -111,6 +111,12 @@ export function StaffForm({
       </Section>
 
       <Section title="Visibility">
+        <Checkbox
+          label="Has agreed to be shown publicly"
+          name="publish_consent"
+          defaultChecked={Boolean(staff?.publish_consent_at)}
+          hint="Required before the profile can go public. Keep their signed consent on file (Kenya Data Protection Act, 2019)."
+        />
         <Checkbox label="Show in the public catalog" name="is_active" defaultChecked={staff?.is_active ?? true} hint="Untick to deactivate. The profile and history are kept." />
         <Checkbox
           label="Vetting rejected"

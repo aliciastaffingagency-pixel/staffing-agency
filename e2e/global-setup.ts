@@ -35,6 +35,8 @@ export default async function globalSetup(config: FullConfig) {
   const db = new pg.Client({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } })
   await db.connect()
   await db.query('delete from private.rate_limits')
+  const { rows } = await db.query<{ now: Date }>('select now()')
+  const startedAt = rows[0].now.toISOString()
   await db.end()
 
   // Digit + letter + 4 hex chars, so teardown can recognise test data without touching real records.
@@ -48,7 +50,7 @@ export default async function globalSetup(config: FullConfig) {
   const { data: c } = await service.from('clients').select('id, agency_id').eq('user_id', client.id).single()
   await service.from('clients').update({ location_text: 'Kilimani, Nairobi' }).eq('id', c!.id)
 
-  const users: E2EUsers = { tag, agencyId: c!.agency_id, admin, client: { ...client, clientId: c!.id } }
+  const users: E2EUsers = { tag, startedAt, agencyId: c!.agency_id, admin, client: { ...client, clientId: c!.id } }
   writeFileSync(USERS_FILE, JSON.stringify(users, null, 2))
 
   await login(baseURL, admin.email, admin.password, 'e2e/.auth/admin.json')

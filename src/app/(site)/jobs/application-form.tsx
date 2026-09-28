@@ -151,8 +151,12 @@ export function ApplicationForm({
           name="consent"
           required
           label="I confirm the information and documents are true and mine."
-          hint="I agree that Alicia Staffing Agency may keep my details and documents to process my application and contact me."
+          hint="I agree that Alicia Staffing Agency may keep my details and documents to process my application, carry out vetting checks and contact me."
         />
+        <p className="-mt-2 pl-8 text-xs text-navy-500">
+          How we use and protect your documents:{' '}
+          <a href="/privacy" target="_blank" className="font-semibold text-brand-600 hover:underline">Privacy Policy</a>
+        </p>
         <FormAlert error={state.error} />
         <div>
           <SubmitButton size="lg" pending={pending} disabled={uploading > 0}>

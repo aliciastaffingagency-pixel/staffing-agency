@@ -14,7 +14,8 @@ const db = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABA
 
 const SEED_EMAIL = 'demo-seed@aliciastaffing.test'
 const CLIENT_EMAIL = 'demo.client@aliciastaffing.test'
-const CLIENT_PASSWORD = 'AliciaDemo#2026'
+// New on every run and printed once: this repository is public, so no fixed password.
+const CLIENT_PASSWORD = `Demo-${crypto.randomUUID().slice(0, 13)}`
 const must = (res, what) => {
   if (res.error) throw new Error(`${what}: ${res.error.message}`)
   return res.data
@@ -42,6 +43,8 @@ async function remove() {
         }
       }
     }
+    // Deleting a login keeps its client record (for signed contracts), so remove it explicitly.
+    must(await db.from('clients').delete().eq('user_id', client.id), 'client rows') // cascades bookings, threads, reviews
     await db.auth.admin.deleteUser(client.id)
   }
   if (seed) {
@@ -94,6 +97,7 @@ async function create() {
           languages,
           bio,
           created_by: seed.id,
+          publish_consent_at: new Date().toISOString(), // real staff: recorded when they agree to be listed
         })),
         { defaultToNull: false },
       )

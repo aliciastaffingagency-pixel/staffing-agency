@@ -39,11 +39,11 @@ export function Button({
 }: {
   title: string
   onPress: () => void
-  variant?: 'primary' | 'navy' | 'outline' | 'whatsapp'
+  variant?: 'primary' | 'navy' | 'outline' | 'whatsapp' | 'danger'
   busy?: boolean
   disabled?: boolean
 }) {
-  const bg = { primary: Brand.magenta, navy: Brand.navy, outline: Brand.white, whatsapp: '#25D366' }[variant]
+  const bg = { primary: Brand.magenta, navy: Brand.navy, outline: Brand.white, whatsapp: '#25D366', danger: Brand.red }[variant]
   const fg = variant === 'outline' ? Brand.navy : Brand.white
   return (
     <Pressable

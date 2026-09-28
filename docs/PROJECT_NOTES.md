@@ -37,6 +37,8 @@ npm run db:push        # apply supabase/migrations/* to the remote DB, then rege
 npm run db:types       # regenerate src/lib/supabase/database.types.ts from the live schema
 node scripts/test-rls.mjs              # end-to-end RLS checks (creates and deletes temp users)
 node scripts/create-admin.mjs <email>  # create or promote a super_admin
+node scripts/create-review-account.mjs # client login for Google Play / App Store reviewers (prints the password once)
+node scripts/app-icons.mjs             # regenerate the mobile icons, splash and Play Store graphics from the logo
 ```
 
 Secrets are in `.env.local`, which git ignores. `.env.example` lists every variable.
@@ -158,13 +160,50 @@ The design is **multi-tenant ready:** every business table has an `agency_id`, a
 - [x] Rate limiting on every public or abusable endpoint: applications, uploads, match, concierge, bookings, messages, threads, M-Pesa prompts. zod validation on all inputs.
 - [x] Security headers (`next.config.ts`): HSTS, nosniff, frame DENY, referrer and permissions policies, no `X-Powered-By`.
 - [x] Admin portal uses a grouped sidebar on large screens (Clients / Staffing / Business). Phones keep a scrolling menu.
-- [x] Demo data: `node scripts/seed-demo.mjs` adds 12 vetted staff, 2 vacancies, and a demo client (`demo.client@aliciastaffing.test` / `AliciaDemo#2026`) with six placements over recent months and published reviews. `--remove` deletes only what the script created (everything is owned by `demo-seed@aliciastaffing.test`). **Demo data is currently loaded.** Remove it before real clients arrive.
+- [x] Demo data: `node scripts/seed-demo.mjs` adds 12 vetted staff, 2 vacancies, and a demo client (`demo.client@aliciastaffing.test`) with six placements over recent months and published reviews. The client's password is new on every run and printed once, because the repo is public. `--remove` deletes only what the script created (everything is owned by `demo-seed@aliciastaffing.test`). **The demo data was removed on 2026-09-28 at the owner's request.** The live database now holds only the owner's account and the real setup (agency, categories, contract template).
 - [x] `docs/DEPLOYMENT.md`: Vercel, Supabase URLs and SMTP, M-Pesa, Paystack, Resend, Africa's Talking, and a go-live checklist.
 - [x] Tests: `node scripts/test-rls.mjs` (45 checks) and `npm run e2e` (10 flows) both pass. The production build passes.
-- [ ] **Owner:** deploy to Vercel and add keys, following `docs/DEPLOYMENT.md`. Deployment needs your Vercel login and domain.
+- [x] Deployed on Vercel (https://staffing-agency-beta.vercel.app). The keys are added as they arrive; see `docs/DEPLOYMENT.md`.
+
+### Speed ✅ (2026-09-28)
+- [x] `vercel.json` pins functions to **`dub1` (Dublin)**, next to the Supabase database in eu-west-1. Before this, every query crossed the Atlantic, from Washington, and took 1–2 s per page.
+- [x] Public pages are pre-rendered and cached on the CDN (ISR, `revalidate = 300`): home, services, staff profiles and jobs. They read through the cookie-free `createPublicClient()`, and the header works out whether someone is signed in in the browser (`HeaderAuth`). Admin changes refresh them straight away with `revalidatePath('/', 'layout')`.
+- [x] The proxy (session refresh) only runs on signed-in areas.
+- Locally, pages feel slow for a different reason: each database round trip from this PC to Ireland takes 0.6–1 s. That is also why the e2e `expect` timeout is 45 s.
+
+### Phase 8 — Privacy, legal and Google Play readiness ✅ (2026-09-28)
+Requested by the owner: delete the demo data, delete staff properly, add forgot password, cover the legal requirements, and prepare for the Google Play audit.
+- [x] **Deletion that removes everything:** `src/lib/services/erasure.ts`.
+  - **Staff** (Admin → Staff → Delete, confirmed by typing their name): profile, vetting checks, reviews, photos, ID documents and login. Matched bookings go back to the queue. Blocked while they are on an active placement.
+  - **Job applications:** the row and its documents.
+  - **Client accounts:** by the client (web Account → Settings, app Account, `POST /api/mobile/delete-account`) or by the owner (Admin → Client accounts). Signed contracts and payments are kept, but the client record is anonymised (`clients.deleted_at`, login detached). Everything else about them is deleted.
+  - **Activity log:** entries about deleted people are redacted by `redact_audit_entries()`, which only the service role can call. The action history stays.
+- [x] **Data rights:** `/account/settings` lets clients edit their details. `/account/export` downloads everything held about them as JSON.
+- [x] **Consent:** staff profiles only go public once `staff_profiles.publish_consent_at` is recorded. The `staff_catalog` view enforces this. Sign-up requires agreeing to the Terms and Privacy Policy, stored as `profiles.terms_accepted_at` by the sign-up trigger.
+- [x] **Forgot password:** web (`/forgot-password` → `/reset-password`) and app.
+  - Reset emails use the implicit flow, so the link carries the session and works on any device. `ResetGate` reads it from the URL fragment.
+  - `AuthLinkHandler` (root layout) forwards reset links that fall back to the home page, and removes tokens from the address bar.
+- [x] **Legal pages** (`src/app/(site)/`):
+  - `/privacy` (Kenya Data Protection Act 2019), `/terms`, `/cookies`, `/refunds`, `/delete-account` (the Google Play deletion page) and `/account-deleted`;
+  - links to them in the footer, at sign-up, on the booking form and in the application declaration;
+  - an essential-cookies notice;
+  - business address and ODPC number fields in Admin → Settings.
+- [x] **Mobile / Google Play:**
+  - branded icons (`scripts/app-icons.mjs`);
+  - blocked permissions (storage, camera, microphone, location, overlay, advertising ID);
+  - `eas.json`;
+  - forgot password, sign-up consent, legal links, and in-app account deletion.
+
+  `mobile/PLAY_STORE.md` has every Play Console answer (Data safety, content rating, app access, listing). `scripts/create-review-account.mjs` creates the reviewer login.
+- [x] **Pre-launch cleanup:** activity-log entries about test and demo records that no longer exist were purged (933 rows). The 15 real setup entries remain.
+- [x] **Tests:**
+  - RLS: 48 checks, including consent in the catalog and only the server being able to redact.
+  - e2e: `e2e/phase8-privacy-legal.spec.ts` covers the legal pages, sign-up consent, forgot and reset password, deleting staff, applications and client accounts (web, app and admin), and the data export.
 
 ## Testing notes
-- The RLS script and e2e tests run against the **live** Supabase project. They create temporary users (`e2e-…@example.test`, `rls-…@example.test`) and records tagged with a run tag: a digit, a letter a–f, then four hex characters, e.g. `Grace Wanjiru 3fa9c1`. Teardown removes all of it: users, bookings, contracts, payments, reviews, vacancies, applications, uploaded files, owner notifications and search-log rows. Each run also sweeps anything an interrupted earlier run left behind. Real names and messages never contain such a token, so real data isn't touched. The audit log is intentionally never edited.
+- The RLS script and e2e tests run against the **live** Supabase project. They create temporary users (`e2e-…@example.test`, `rls-…@example.test`) and records tagged with a run tag: a digit, a letter a–f, then four hex characters, e.g. `Grace Wanjiru 3fa9c1`. Teardown removes all of it: users, client records, bookings, contracts, payments, reviews, vacancies, applications, uploaded files, owner notifications and search-log rows. Each run also sweeps anything an interrupted earlier run left behind. Real names and messages never contain such a token, so real data isn't touched.
+  - **Activity log:** entries written during the run about records that no longer exist are removed. Entries about records that still exist are never touched.
+  - **Deleting a login doesn't remove its client record:** `clients.user_id` is `on delete set null`, so signed contracts can be kept. Scripts that delete test users must delete their `clients` rows first; the teardown, the RLS script and the seed script already do.
 - Pre-launch test clutter (notifications, searches, files) was cleared from the live database on 2026-09-28.
 - Once real clients are on the platform, create a separate Supabase **staging** project for tests. Point a copy of `.env.local` at it and run `npm run db:push` there first.
 - The e2e suite needs the dev server on port 3100 (`npm run dev -- -p 3100`) and `MPESA_ENV=simulate` in `.env.local`, which is local only.
@@ -177,13 +216,18 @@ The design is **multi-tenant ready:** every business table has an `agency_id`, a
 
 ## Open items for the owner
 
-1. **Supabase Auth settings** (Dashboard → Authentication):
-   - **URL Configuration:** set **Site URL** to `https://staffing-agency-beta.vercel.app` (or your custom domain later). Add these **Redirect URLs**: `https://staffing-agency-beta.vercel.app/**`, `http://localhost:3000/**` and `http://localhost:3100/**`. Without this, confirmation and login emails send people to the wrong address.
-   - **Email:** Supabase's built-in email sender is heavily rate-limited, and on new projects it may only deliver to team members. Until custom SMTP is set up (Resend, Phase 3), either turn off "Confirm email" for testing or expect confirmation emails not to arrive.
-   - **Phone OTP login:** needs an SMS provider. Africa's Talking isn't built in; it needs a "Send SMS" auth hook (planned).
-2. **Marketing numbers:** the animated counters ("500+ staff placed", etc.) only appear once real figures are saved in `agencies.settings.stats`, e.g. `[{"label":"Staff placed","value":500,"suffix":"+"}]`. We don't publish invented numbers.
-3. **Trust badge wording:** check that the copy on the landing page ("National ID confirmed in person", "References called", "Completed our training") matches the real vetting process. It's in `src/components/landing/sections.tsx` (`TRUST`).
-4. **Contract terms:** the template uses placeholder terms (14-day trial, 14 days' notice, 2 free replacements within 90 days). Confirm or change them in **Admin → Settings** and save.
-7. **Keys to add when ready** (see `docs/DEPLOYMENT.md`): M-Pesa Daraja, Paystack, Resend, Africa's Talking, and optionally `ANTHROPIC_API_KEY`. Everything works without them in a manual/rules mode.
-5. **Security:** change the database password (the current one is weak and has been shared in chat), then update `DATABASE_URL`.
-6. **Photos:** the hero and service photos are cropped from the flyer (`scripts/crop-flyer.mjs`). The apron in the hero still says "Househelps Bureau". Replace it with real photos when available.
+1. **Supabase Auth settings (urgent; blocks real sign-ups and password resets).** On 2026-09-28 the Site URL was verified to still be `http://localhost:3000`, and email confirmation is required. Set both in Dashboard → Authentication:
+   - **URL Configuration:** set **Site URL** to `https://staffing-agency-beta.vercel.app` (or the custom domain later); any path on it is then allowed. Add the **Redirect URLs** `http://localhost:3000/**` and `http://localhost:3100/**`.
+   - **Email:** the built-in sender only delivers to the project team and only a few per hour. Set up custom SMTP with Resend; `docs/DEPLOYMENT.md` step 2 has the values.
+
+   With a Supabase personal access token in `.env.local` (`SUPABASE_ACCESS_TOKEN`), a developer can set all of this through the Management API.
+2. **Legal:** register with the ODPC, then fill in the business address and ODPC number in Admin → Settings. Confirm the promises in the policies (14-day refunds, 7-day deletion on request, retention periods), and have a Kenyan advocate review the pages. See `docs/DEPLOYMENT.md` step 6.
+3. **Google Play:** create a developer account (an organisation account needs a D-U-N-S number; a personal one needs 12 testers for 14 days) and an Expo account. Set up Firebase for Android push. Everything else is in `mobile/PLAY_STORE.md`.
+4. **Vercel plan:** Hobby is for non-commercial use only; move to Pro before taking real bookings.
+5. **Marketing numbers:** the animated counters ("500+ staff placed", etc.) only appear once real figures are saved in `agencies.settings.stats`, e.g. `[{"label":"Staff placed","value":500,"suffix":"+"}]`. We don't publish invented numbers.
+6. **Trust badge wording:** check that the copy on the landing page ("National ID confirmed in person", "References called", "Completed our training") matches the real vetting process. It's in `src/components/landing/sections.tsx` (`TRUST`). The Play Store description makes the same claims.
+7. **Contract terms:** the template uses placeholder terms (14-day trial, 14 days' notice, 2 free replacements within 90 days). Confirm or change them in **Admin → Settings** and save. The Terms and Refund pages quote them.
+8. **Keys to add when ready** (see `docs/DEPLOYMENT.md`): M-Pesa Daraja, Paystack, Resend, Africa's Talking, and optionally `ANTHROPIC_API_KEY`. Everything works without them in a manual/rules mode.
+9. **Security:** change the owner's login password, and the database password (weak and shared in chat); then update `DATABASE_URL`.
+10. **Photos:** the hero and service photos are cropped from the flyer (`scripts/crop-flyer.mjs`). The apron in the hero still says "Househelps Bureau". Replace it with real photos when available.
+11. **Phone OTP login** (optional): needs an SMS "Send SMS" auth hook with Africa's Talking.

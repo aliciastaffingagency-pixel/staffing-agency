@@ -29,6 +29,7 @@ function RootStack() {
       <Stack.Protected guard={!signedIn}>
         <Stack.Screen name="sign-in" options={{ headerShown: false }} />
         <Stack.Screen name="sign-up" options={{ title: 'Create account' }} />
+        <Stack.Screen name="forgot-password" options={{ title: 'Reset password' }} />
       </Stack.Protected>
       <Stack.Protected guard={signedIn}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -36,6 +37,7 @@ function RootStack() {
         <Stack.Screen name="book" options={{ title: 'Request staff', presentation: 'modal' }} />
         <Stack.Screen name="bookings/[id]" options={{ title: 'My booking' }} />
         <Stack.Screen name="messages/[id]" options={{ title: 'Conversation' }} />
+        <Stack.Screen name="delete-account" options={{ title: 'Delete account' }} />
       </Stack.Protected>
     </Stack>
   )

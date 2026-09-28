@@ -2,13 +2,14 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ArrowLeft, ExternalLink, FileText } from 'lucide-react'
+import { ConfirmDelete } from '@/components/admin/confirm-delete'
 import { PageHeader, Panel, StatusPill } from '@/components/portal/portal-shell'
 import { Button } from '@/components/ui/button'
 import { getAgency } from '@/lib/agency'
 import { requireRole } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import { formatDate } from '@/lib/utils'
-import { setStaffActive } from '../actions'
+import { deleteStaff, setStaffActive } from '../actions'
 import { StaffForm } from '../staff-form'
 import { StaffLoginForm, VettingCheckForm } from './panels'
 
@@ -58,13 +59,17 @@ export default async function EditStaffPage({ params, searchParams }: PageProps<
           </span>
         }
         action={
-          <form action={setStaffActive}>
-            <input type="hidden" name="id" value={staff.id} />
-            <input type="hidden" name="active" value={String(!staff.is_active)} />
-            <Button variant={staff.is_active ? 'outline' : 'primary'} size="sm">
-              {staff.is_active ? 'Deactivate' : 'Reactivate'}
-            </Button>
-          </form>
+          staff.is_active || staff.publish_consent_at ? (
+            <form action={setStaffActive}>
+              <input type="hidden" name="id" value={staff.id} />
+              <input type="hidden" name="active" value={String(!staff.is_active)} />
+              <Button variant={staff.is_active ? 'outline' : 'primary'} size="sm">
+                {staff.is_active ? 'Deactivate' : 'Reactivate'}
+              </Button>
+            </form>
+          ) : (
+            <span className="text-sm text-navy-400">Record their consent below to publish</span>
+          )
         }
       />
 
@@ -130,6 +135,21 @@ export default async function EditStaffPage({ params, searchParams }: PageProps<
               <p className="text-sm text-navy-400">No placements yet.</p>
             )}
           </Panel>
+
+          <ConfirmDelete
+            action={deleteStaff}
+            id={staff.id}
+            phrase={staff.full_name}
+            title="Delete this staff member"
+            button="Delete permanently"
+            deletes={[
+              'The profile, photo, ID document and every uploaded file',
+              'Vetting checks, badges and client reviews',
+              'Their staff login, if they have one',
+              'Personal details stored in the activity log',
+            ]}
+            keeps={['Past bookings and signed contracts (their name stays in the contract text)']}
+          />
         </div>
       </div>
     </div>

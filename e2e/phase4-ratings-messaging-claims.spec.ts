@@ -9,7 +9,7 @@ test('client rates, requests a replacement, chats live with the agency; review g
 
   // An active placement for our client (set up directly).
   const { data: cat } = await service.from('staff_categories').select('id').eq('agency_id', agencyId).eq('slug', 'cook-chef').single()
-  const { data: staff } = await service.from('staff_profiles').insert({ agency_id: agencyId, category_id: cat!.id, full_name: `Joseph Kamau ${tag}`, availability: 'placed' }).select('id').single()
+  const { data: staff } = await service.from('staff_profiles').insert({ agency_id: agencyId, category_id: cat!.id, full_name: `Joseph Kamau ${tag}`, availability: 'placed', publish_consent_at: new Date().toISOString() }).select('id').single()
   const { data: booking } = await service
     .from('booking_requests')
     .insert({ agency_id: agencyId, client_id: client.clientId, staff_id: staff!.id, category_id: cat!.id, status: 'active', location_text: 'Karen' })

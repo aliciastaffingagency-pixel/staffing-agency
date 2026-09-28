@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { Mail, MapPin, Phone } from 'lucide-react'
 import { Logo } from '@/components/brand/logo'
 import { WhatsAppIcon } from '@/components/icons'
+import { LEGAL_LINKS } from '@/components/legal/legal-page'
 import { formatPhone, getAgency, getCategories, whatsappLink } from '@/lib/agency'
 
 export async function SiteFooter() {
@@ -60,9 +61,21 @@ export async function SiteFooter() {
         </div>
       </div>
       <div className="relative border-t border-white/10">
-        <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-6 py-5 text-xs text-white/50 sm:flex-row">
-          <p>© {new Date().getFullYear()} {agency.name}. All rights reserved.</p>
-          <p>Trained · Verified · Trusted &amp; Ready to Serve</p>
+        <div className="mx-auto grid max-w-7xl gap-3 px-6 py-5 text-xs text-white/50">
+          <nav aria-label="Legal" className="flex flex-wrap justify-center gap-x-5 gap-y-2 sm:justify-start">
+            {LEGAL_LINKS.map((l) => (
+              <Link key={l.href} href={l.href} className="hover:text-white">
+                {l.label}
+              </Link>
+            ))}
+          </nav>
+          <div className="flex flex-col items-center justify-between gap-2 sm:flex-row">
+            <p>
+              © {new Date().getFullYear()} {agency.name}. All rights reserved.
+              {agency.settings.address && <> · {agency.settings.address}</>}
+            </p>
+            <p>Trained · Verified · Trusted &amp; Ready to Serve</p>
+          </div>
         </div>
       </div>
     </footer>

@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { BadgeCheck, GraduationCap, Plus, ShieldCheck, Star, UserRound } from 'lucide-react'
 import { EmptyState, PageHeader, StatusPill } from '@/components/portal/portal-shell'
 import { ButtonLink } from '@/components/ui/button'
+import { FormAlert } from '@/components/ui/form'
 import { requireRole } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 import { AVAILABILITY_LABEL, formatKes } from '@/lib/utils'
@@ -42,6 +43,8 @@ export default async function StaffListPage({ searchParams }: PageProps<'/admin/
           </ButtonLink>
         }
       />
+
+      {typeof sp.deleted === 'string' && <FormAlert message={`${sp.deleted} was deleted, along with their files and personal data.`} />}
 
       <form className="flex flex-wrap gap-2 rounded-3xl border border-brand-100 bg-white p-3">
         <input name="q" defaultValue={q} placeholder="Search name or area…" className="h-10 min-w-48 flex-1 rounded-full border border-navy-100 px-4 text-sm outline-none focus:border-brand-400" />

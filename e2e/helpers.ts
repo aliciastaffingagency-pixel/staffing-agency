@@ -10,6 +10,7 @@ export const service = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, proce
 
 export type E2EUsers = {
   tag: string
+  startedAt: string // database time when the run began (activity-log cleanup)
   agencyId: string
   admin: { id: string; email: string; password: string }
   client: { id: string; email: string; password: string; clientId: string }

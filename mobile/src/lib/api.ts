@@ -4,7 +4,7 @@ import { supabase } from './supabase'
 // M-Pesa prompts, notifications) runs there so the app and website behave identically.
 const API_URL = (process.env.EXPO_PUBLIC_API_URL ?? '').replace(/\/$/, '')
 
-export type Op = 'bookings' | 'sign' | 'pay' | 'threads' | 'messages' | 'ratings' | 'push-token'
+export type Op = 'bookings' | 'sign' | 'pay' | 'threads' | 'messages' | 'ratings' | 'push-token' | 'delete-account'
 
 async function post<T>(path: string, body: unknown, withAuth = true): Promise<T> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' }

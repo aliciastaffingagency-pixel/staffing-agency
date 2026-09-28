@@ -31,6 +31,8 @@ export default async function SettingsPage() {
             whatsapp: agency.whatsapp,
             email: agency.email,
             service_area_label: agency.settings.service_area_label ?? 'Serving all areas',
+            address: agency.settings.address ?? '',
+            odpc_registration: agency.settings.odpc_registration ?? '',
             stats: (agency.settings.stats ?? []).map((s) => [s.label, s.value, s.suffix].filter((x) => x != null && x !== '').join(' | ')).join('\n'),
           }}
         />

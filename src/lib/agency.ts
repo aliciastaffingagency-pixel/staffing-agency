@@ -9,6 +9,10 @@ export type AgencyStat = { label: string; value: number; suffix?: string }
 
 export type AgencySettings = {
   service_area_label?: string
+  /** Registered business address, shown in the legal pages and footer. */
+  address?: string
+  /** Office of the Data Protection Commissioner registration number, once registered. */
+  odpc_registration?: string
   map_center?: [number, number]
   stats?: AgencyStat[]
 }

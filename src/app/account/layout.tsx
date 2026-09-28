@@ -20,6 +20,7 @@ export default async function AccountLayout({ children }: { children: React.Reac
         { href: '/account/staff', label: 'My staff' },
         { href: '/book', label: 'Request staff' },
         { href: '/staff', label: 'Browse staff' },
+        { href: '/account/settings', label: 'Settings' },
       ]}
     >
       {children}

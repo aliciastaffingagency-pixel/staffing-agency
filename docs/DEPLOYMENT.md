@@ -17,14 +17,30 @@ These are the steps to put Alicia Staffing Agency on its own domain, with paymen
    `DATABASE_URL` is only needed for migrations from your computer. Don't add it to Vercel.
 4. Deploy. Then go to **Settings → Domains** and add your domain **(owner)**.
 
-## 2. Point Supabase at the live site
+## 2. Point Supabase at the live site (do this first: sign-up and password reset depend on it)
+
+On 28 September 2026 the **Site URL was still `http://localhost:3000`**. That was tested with a reset link. It means every confirmation or reset email sent to a real user leads to a dead page.
 
 Go to Supabase → **Authentication → URL Configuration**:
 
-- **Site URL:** `https://<your-domain>`
-- **Redirect URLs:** `https://<your-domain>/**` and `http://localhost:3000/**`
+- **Site URL:** `https://staffing-agency-beta.vercel.app`, and later your own domain. Any page on this address is automatically allowed as a link target.
+- **Redirect URLs:** `http://localhost:3000/**` and `http://localhost:3100/**` (local development and tests). Once you have a custom domain, also add the other address: the Vercel one, or the custom one.
 
-Then go to **Authentication → Emails → SMTP settings** and plug in Resend's SMTP details (see step 4). Supabase's built-in mailer only sends a handful of emails per hour.
+Then go to **Authentication → Emails → SMTP settings** and turn on custom SMTP with Resend (see step 4). Supabase's built-in sender only delivers to your own team's addresses and only a few per hour, so real clients never get their emails without this.
+
+| Field | Value |
+| --- | --- |
+| Host | `smtp.resend.com` |
+| Port | `465` |
+| Username | `resend` |
+| Password | your Resend API key |
+| Sender | an address on your verified domain, e.g. `hello@<your-domain>`, name `Alicia Staffing Agency` |
+
+**Test it:** on the live site, click **Log in → Forgot password?** and enter your own email. The link should open the "Choose a new password" page.
+
+How the emails work:
+- **Password reset links** carry the session in the link itself, so they work whether they're opened on the same phone or another device. They also work for app users: the page opens on the website, and they then log in to the app with the new password.
+- **Sign-up confirmations from the app** land on the website's login page, which tells the person their email is confirmed.
 
 ## 3. Payments
 
@@ -62,17 +78,57 @@ In-app notifications work without any keys.
 
 Set `ANTHROPIC_API_KEY` to switch Smart match and the website concierge from the built-in rules to Claude. Everything keeps working without it.
 
-## 6. Before the first real client
+## 6. Legal and privacy (owner)
 
+The website has the pages Kenyan law and Google Play expect. They are linked from every page footer, the sign-up form and the app:
+- `/privacy`: Privacy Policy, written for the Kenya Data Protection Act, 2019;
+- `/terms`: Terms of Service;
+- `/cookies`: Cookie Policy (essential cookies only, so it needs a notice, not a consent banner);
+- `/refunds`: Refund & Cancellation Policy;
+- `/delete-account`: how to delete an account.
+
+They are a solid starting point, not legal advice. Before launch:
+
+- [ ] **Register with the Office of the Data Protection Commissioner** (https://www.odpc.go.ke) as a data controller. An agency that handles ID documents and background checks almost certainly has to. Put the registration number in **Admin → Settings** ("ODPC registration number"), and it appears in the Privacy Policy.
+- [ ] Add the agency's **registered business address** there too ("Business address"). It shows in the footer and the policies (today they say "Nairobi, Kenya").
+- [ ] **Confirm the promises the policies make:**
+  - refunds within **14 days** when we can't provide staff;
+  - account deletion within **7 days** when someone asks by email or WhatsApp;
+  - keeping contracts and payments for **5 years** (Kenyan tax law);
+  - keeping applications, chats and searches for **12 months**.
+
+  Change the pages under `src/app/(site)/` if your practice differs.
+- [ ] Ask a **Kenyan advocate** to read the Terms, Privacy and Refund policies once. Tell them about the trial, notice and replacement terms in your contract template.
+- [ ] **Staff consent:** a staff profile can only be public once "Has agreed to be shown publicly" is ticked. Keep each person's signed consent on file.
+
+Deleting data:
+- **Staff** (Admin → Staff → a profile → Delete) removes their profile, vetting records, reviews, photos, ID documents and login. It also blanks their details in the activity log.
+- **Clients** can delete their own account: on the website (Account → Settings) or in the app (Account → Delete my account). The owner can also do it for them (Admin → Client accounts).
+- **What is kept:** signed contracts and payment records, with the client's details removed, as the law requires.
+- **Applications:** delete them from the application page.
+
+## 7. The mobile app
+
+`mobile/PLAY_STORE.md` walks through publishing on Google Play. It covers:
+- the developer account;
+- EAS builds;
+- the Data safety, content rating and app access answers;
+- the store listing text and graphics (in `mobile/store/`);
+- a login for Google's reviewers, created with `node scripts/create-review-account.mjs`.
+
+## 8. Before the first real client
+
+- [ ] Do **step 2** (Supabase Site URL and SMTP). Then test sign-up and **Forgot password?** on the live site with your own email.
 - [ ] Log in as the owner (`aliciastaffingagency@gmail.com`) and **change the password**.
-- [ ] Change the Supabase **database password**. Then update `DATABASE_URL` in your local `.env.local`.
-- [ ] **Admin → Settings:** check the contract template and confirm the trial period, notice period and replacement policy, then save. The save records that you've confirmed them.
-- [ ] **Admin → Settings:** add real figures for the homepage counters, or leave them empty.
-- [ ] **Admin → Staff:** add real staff profiles and record their vetting checks.
-- [ ] If you ran `node scripts/seed-demo.mjs` for a presentation, remove the demo data with `node scripts/seed-demo.mjs --remove`.
+- [ ] Change the Supabase **database password**. Then update `DATABASE_URL` in your local `.env.local`. If `DATABASE_URL` was ever added to Vercel, delete it there; the website doesn't need it.
+- [ ] **Vercel plan:** the free Hobby plan is for non-commercial use only. Move the project to **Pro** before taking real bookings.
+- [ ] **Admin → Settings:** check the contract template and confirm the trial period, notice period and replacement policy, then save. The save records that you've confirmed them. The Terms and Refund pages quote these numbers.
+- [ ] **Admin → Settings:** fill in the business address and ODPC number, and add real figures for the homepage counters or leave them empty.
+- [ ] **Admin → Staff:** add real staff profiles, record their vetting checks, and tick consent to publish.
+- [ ] Demo data was removed on 28 September 2026. If you run `node scripts/seed-demo.mjs` for a presentation, remove it again with `node scripts/seed-demo.mjs --remove`.
 - [ ] Replace the flyer-cropped photos in `public/brand/`. The hero apron still says "Househelps Bureau".
 
-## 7. Keeping the database in step
+## 9. Keeping the database in step
 
 Schema changes live in `supabase/migrations/`. From your computer, with `.env.local` filled in:
 

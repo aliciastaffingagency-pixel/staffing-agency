@@ -3,7 +3,8 @@
 import { useActionState } from 'react'
 import { Building2, Home, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Field, FormAlert } from '@/components/ui/form'
+import Link from 'next/link'
+import { Checkbox, Field, FormAlert } from '@/components/ui/form'
 import { signUp, type AuthState } from '../actions'
 
 export function SignupForm({ next }: { next: string }) {
@@ -35,6 +36,16 @@ export function SignupForm({ next }: { next: string }) {
       <Field label="Phone (M-Pesa number)" name="phone" type="tel" autoComplete="tel" required defaultValue={f.phone} placeholder="0712 345 678" />
       <Field label="Email" name="email" type="email" autoComplete="email" required defaultValue={f.email} placeholder="you@example.com" />
       <Field label="Password" name="password" type="password" autoComplete="new-password" required minLength={8} hint="At least 8 characters" />
+      <Checkbox
+        name="terms"
+        required
+        label="I agree to the Terms of Service and Privacy Policy"
+        hint="Read the Terms and Privacy Policy (they open in a new tab)."
+      />
+      <p className="-mt-2 flex gap-4 pl-8 text-xs">
+        <Link href="/terms" target="_blank" className="font-semibold text-brand-600 hover:underline">Terms of Service</Link>
+        <Link href="/privacy" target="_blank" className="font-semibold text-brand-600 hover:underline">Privacy Policy</Link>
+      </p>
       <FormAlert error={state.error} />
       <Button type="submit" size="lg" disabled={pending} className="mt-1 w-full">
         {pending && <Loader2 className="size-5 animate-spin" />} Create account

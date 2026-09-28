@@ -34,6 +34,10 @@ test('admin creates a staff profile with photo; vetting checks unlock badges', a
   await admin.getByLabel('Years of experience').fill('6')
   await admin.getByLabel('Monthly rate (KES)').fill('14,000')
   await admin.getByLabel('Home area').fill('Kilimani')
+  // Publishing needs the person's recorded agreement (Kenya Data Protection Act).
+  await admin.getByRole('button', { name: 'Create profile' }).click()
+  await expect(admin.getByText('Tick "has agreed to be shown publicly" before publishing')).toBeVisible()
+  await admin.getByLabel('Has agreed to be shown publicly').check()
   await admin.getByRole('button', { name: 'Create profile' }).click()
   await admin.waitForURL(/\/admin\/staff\/[0-9a-f-]{36}/)
   await expect(admin.getByText('Profile created.')).toBeVisible()

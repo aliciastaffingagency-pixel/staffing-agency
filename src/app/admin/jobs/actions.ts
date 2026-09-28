@@ -6,6 +6,7 @@ import { z } from 'zod'
 import type { FormState } from '@/components/ui/form'
 import { APPLICATION_STATUSES } from '@/lib/jobs'
 import { requireRole } from '@/lib/auth'
+import { deleteApplication } from '@/lib/services/erasure'
 import { createClient } from '@/lib/supabase/server'
 import { splitList } from '@/lib/utils'
 
@@ -182,4 +183,16 @@ export async function convertToStaff(formData: FormData) {
     .eq('id', id)
   revalidatePath('/admin', 'layout')
   redirect(`/admin/staff/${staff.id}?created=1`)
+}
+
+// Permanently deletes an application and its uploaded documents.
+export async function removeApplication(_prev: FormState, formData: FormData): Promise<FormState> {
+  const session = await requireRole('super_admin')
+  const id = z.uuid().safeParse(formData.get('id'))
+  if (!id.success) return { error: 'Unknown application' }
+  if (String(formData.get('confirm') ?? '').trim().toUpperCase() !== 'DELETE') return { error: 'Type DELETE to confirm.' }
+  const res = await deleteApplication(session.agency_id, id.data)
+  if (res.error !== undefined) return { error: res.error }
+  revalidatePath('/admin', 'layout')
+  redirect(`/admin/applications?deleted=${encodeURIComponent(res.name)}`)
 }

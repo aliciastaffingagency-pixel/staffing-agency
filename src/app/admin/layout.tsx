@@ -30,6 +30,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         { href: '/admin/messages', label: 'Messages', count: unreadThreads, group: 'Clients' },
         { href: '/admin/moderation', label: 'Reviews & requests', count: (reviews.count ?? 0) + (claims.count ?? 0), group: 'Clients' },
         { href: '/admin/leads', label: 'Leads', count: leads.count ?? 0, group: 'Clients' },
+        { href: '/admin/clients', label: 'Client accounts', group: 'Clients' },
         { href: '/admin/staff', label: 'Staff', group: 'Staffing' },
         { href: '/admin/categories', label: 'Categories', group: 'Staffing' },
         { href: '/admin/jobs', label: 'Vacancies', group: 'Staffing' },

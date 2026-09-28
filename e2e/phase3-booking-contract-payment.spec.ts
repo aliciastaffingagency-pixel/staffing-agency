@@ -11,7 +11,7 @@ test('request → match → contract → sign → M-Pesa → countersign → act
   const { data: nanny } = await service.from('staff_categories').select('id').eq('agency_id', agencyId).eq('slug', 'nanny').single()
   const { data: staff, error } = await service
     .from('staff_profiles')
-    .insert({ agency_id: agencyId, category_id: nanny!.id, full_name: `Mary Achieng ${tag}`, month_rate: 16000, live_arrangement: 'live_in', location_text: 'Kilimani' })
+    .insert({ agency_id: agencyId, category_id: nanny!.id, full_name: `Mary Achieng ${tag}`, month_rate: 16000, live_arrangement: 'live_in', location_text: 'Kilimani', publish_consent_at: new Date().toISOString() })
     .select('id')
     .single()
   expect(error).toBeNull()
@@ -126,6 +126,8 @@ test('request → match → contract → sign → M-Pesa → countersign → act
   await op.waitForURL('**/account')
   const res = await op.goto(`/account/bookings/${bookingId}`)
   expect(res!.status()).toBe(404)
+  // Deleting a login leaves its client record (kept when there are signed contracts), so remove it first.
+  await service.from('clients').delete().eq('user_id', other.data.user!.id)
   await service.auth.admin.deleteUser(other.data.user!.id)
 
   // --- Admin ends the placement → staff available again

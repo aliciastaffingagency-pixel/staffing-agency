@@ -5,7 +5,9 @@ import { defineConfig, devices } from '@playwright/test'
 export default defineConfig({
   testDir: './e2e',
   timeout: 120_000,
-  expect: { timeout: 20_000 },
+  // Generous: the dev server compiles pages on first visit, and from a local machine each database
+  // round trip to Supabase (eu-west-1) takes ~0.6–1 s, so a busy admin page can take 20 s+ to render.
+  expect: { timeout: 45_000 },
   fullyParallel: false,
   workers: 1,
   retries: 0,

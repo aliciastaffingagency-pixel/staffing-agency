@@ -8,6 +8,7 @@ The client app for Alicia Staffing Agency, for Android and iOS. It covers:
 - **My hires:** track progress, read and sign the contract, pay the agency fee by M-Pesa, rate staff, and request a replacement, report an issue, or extend or end the contract.
 - **Messages:** live chat with the agency.
 - **Push notifications:** matches, contracts, payments and replies.
+- **Account and privacy:** forgot password, agreeing to the Terms and Privacy Policy at sign-up, links to both, downloading your data (on the website) and deleting your account in the app.
 
 The app uses the same Supabase project and row-level security as the website. Work that needs the server (e-signature with IP capture, M-Pesa prompts, notifications) goes through the website's JSON API at `/api/mobile/*` and `/api/match`. Clients get the same rules and behaviour on the web and in the app.
 
@@ -38,16 +39,27 @@ npx eas-cli@latest build --profile development --platform android
 
 ## Push notifications
 
-After `eas init`, the app registers each device's Expo push token after sign-in. The website sends pushes through Expo's push service, alongside the in-app, email and SMS notifications. It needs no extra keys. For iOS, add push credentials when EAS prompts you during `eas build`.
+After `eas init`, the app registers each device's Expo push token after sign-in. The website sends pushes through Expo's push service, alongside the in-app, email and SMS notifications. The website needs no extra keys. The builds do:
+- **Android:** Firebase Cloud Messaging credentials (see `PLAY_STORE.md`, step 1).
+- **iOS:** add push credentials when EAS prompts you during `eas build`.
 
 ## Releasing
 
+`eas.json` has three build profiles:
+- `development`: a dev client for `npx expo start`;
+- `preview`: an installable APK for testing on phones;
+- `production`: the store build. Build numbers are managed by EAS and go up automatically.
+
+Build servers don't see your `.env` file. The Supabase URL and anon key are stored as EAS environment variables (`PLAY_STORE.md`, step 1), and the website URL is in `eas.json`.
+
 ```bash
+npx eas-cli@latest build --platform android --profile preview      # APK for testing
 npx eas-cli@latest build --platform android --profile production   # Play Store .aab
 npx eas-cli@latest build --platform ios --profile production       # App Store
-npx eas-cli@latest submit --platform android                       # upload to Play Console
-npx eas-cli@latest update --branch production                      # over-the-air JS updates
+npx eas-cli@latest submit --platform android                       # upload to Play Console (after the first manual upload)
 ```
+
+**Google Play:** `PLAY_STORE.md` covers every Play Console answer: data safety, content rating, app access, store listing and the release checklist.
 
 ## Checks
 
@@ -56,5 +68,7 @@ npx tsc --noEmit
 npx expo lint
 npx expo-doctor
 ```
+
+App icons, the notification icon, the splash image and the store graphics are generated from the logo: run `node scripts/app-icons.mjs` at the repo root.
 
 Database types come straight from the web app (`../src/lib/supabase/database.types.ts`, a type-only import). When the database changes, run `npm run db:types` at the repo root, and the app picks up the new types.

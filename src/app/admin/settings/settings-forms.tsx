@@ -6,7 +6,7 @@ import { saveAgency, saveTemplate } from './actions'
 export function AgencyForm({
   agency,
 }: {
-  agency: { name: string; tagline: string | null; phone: string | null; whatsapp: string | null; email: string | null; service_area_label: string; stats: string }
+  agency: { name: string; tagline: string | null; phone: string | null; whatsapp: string | null; email: string | null; service_area_label: string; address: string; odpc_registration: string; stats: string }
 }) {
   const [state, onSubmit, pending] = useFormAction<FormState>(saveAgency, {})
   return (
@@ -18,6 +18,8 @@ export function AgencyForm({
         <Field label="WhatsApp number" name="whatsapp" required defaultValue={agency.whatsapp ? `+${agency.whatsapp}` : ''} />
         <Field label="Email" name="email" type="email" required defaultValue={agency.email ?? ''} />
         <Field label="Service area label" name="service_area_label" defaultValue={agency.service_area_label} />
+        <Field label="Business address" name="address" defaultValue={agency.address} maxLength={200} placeholder="e.g. 2nd floor, Example House, Ngong Road, Nairobi" hint="Shown in the Privacy Policy and footer (required by data protection law)" />
+        <Field label="ODPC registration number (optional)" name="odpc_registration" defaultValue={agency.odpc_registration} maxLength={60} hint="Office of the Data Protection Commissioner, once registered" />
       </div>
       <TextArea
         label="Homepage counters (optional)"
