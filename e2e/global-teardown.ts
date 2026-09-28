@@ -27,5 +27,8 @@ export default async function globalTeardown() {
   if (staffIds.length) await service.from('staff_profiles').delete().in('id', staffIds)
   await service.from('staff_categories').delete().eq('agency_id', agencyId).ilike('name', like)
   await service.auth.admin.deleteUser(admin.id)
+  // Any other accounts a test created for this run (e.g. a second client).
+  const { data: all } = await service.auth.admin.listUsers({ perPage: 1000 })
+  for (const u of all?.users ?? []) if (u.email?.endsWith(`-${tag}@example.test`)) await service.auth.admin.deleteUser(u.id)
   console.log(`e2e cleanup done for run ${tag}`)
 }

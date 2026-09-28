@@ -122,9 +122,16 @@ The design is **multi-tenant ready:** every business table has an `agency_id`, a
 - [x] Fixes: thread SELECT policy (RETURNING visibility) and guard trigger so clients can only mark threads read
 - [x] Tests: 45 RLS checks; e2e for rating → moderation → public, replacement request + live two-way chat, claims
 
-### Phases 5–7
+### Phase 5 — Trust, AI and growth ✅ (2026-09-28)
+- [x] Trust badges tied to admin-confirmed vetting checks (built in Phase 2)
+- [x] **Smart match** (`/match`): clients describe their need in plain language. With `ANTHROPIC_API_KEY` set, Claude (`claude-opus-5`, tool use via the SDK tool runner, server-side refusal fallback `fallbacks: "default"`) searches live availability with a `search_staff` tool and submits a ranked shortlist with one-line reasons (ids validated server-side). Without a key (or on any API error) a transparent rules engine ranks by role synonyms, distance (area gazetteer), live-in/out, budget, skills, languages, badges and ratings. Every query is logged to `match_queries`.
+- [x] **Website concierge** (chat bubble on every public page, `/api/concierge`): answers only from real agency facts (services, live pay ranges, contract terms, contacts) and captures callback leads (`save_lead` tool → `leads` table + owner SMS/in-app alert). Rules-mode FAQ + phone-number lead capture without a key. Rate-limited per IP.
+- [x] `/admin/leads`: callback list with call/WhatsApp buttons and status (new → contacted → converted/closed)
+- [x] `/admin/analytics` (30/90/365 days): conversion funnel, fees by month, demand map (requests + unmatched searches by area), demand by role, **searches that found nobody** (recruiting signal), top-rated staff, retention/churn (placements ended within trial, average length, replacements, disputes)
+- [ ] Optional items not built: GPS shift check-in/out, in-app micro-training, referral programme (see "Ideas" below)
+
+### Phases 6–7
 See `docs/BUILD_BRIEF.md`:
-- Phase 5: trust features, AI and analytics.
 - Phase 6: Expo mobile app.
 - Phase 7: hardening and deployment.
 

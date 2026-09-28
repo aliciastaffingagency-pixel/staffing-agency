@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { SlidersHorizontal } from 'lucide-react'
+import { SlidersHorizontal, Sparkles } from 'lucide-react'
 import { SectionHeading } from '@/components/landing/sections'
 import { Reveal, Stagger, StaggerItem } from '@/components/motion'
 import { StaffCard, STAFF_CARD_COLUMNS } from '@/components/staff/staff-card'
@@ -108,6 +108,9 @@ export default async function StaffCatalogPage({ searchParams }: PageProps<'/sta
               <Link href="/staff" className="ml-3 font-semibold text-brand-600 hover:underline">Clear filters</Link>
             )}
           </p>
+          <Link href="/match" className="inline-flex items-center gap-1.5 rounded-full border-2 border-navy-800/15 bg-white px-4 py-2 font-semibold text-navy-800 hover:border-brand-400 hover:text-brand-600">
+            <Sparkles className="size-4 text-gold-500" /> Describe what you need instead
+          </Link>
         </div>
 
         {staff.length ? (

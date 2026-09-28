@@ -7,12 +7,13 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const session = await requireRole('super_admin')
   const supabase = await createClient()
   const head = { count: 'exact', head: true } as const
-  const [apps, bookings, threads, reviews, claims] = await Promise.all([
+  const [apps, bookings, threads, reviews, claims, leads] = await Promise.all([
     supabase.from('job_applications').select('id', head).eq('agency_id', session.agency_id).eq('status', 'new'),
     supabase.from('booking_requests').select('id', head).eq('agency_id', session.agency_id).eq('status', 'pending'),
     supabase.from('message_threads').select('last_message_at, admin_last_read_at').eq('agency_id', session.agency_id).eq('status', 'open'),
     supabase.from('ratings').select('id', head).eq('agency_id', session.agency_id).is('moderated_at', null),
     supabase.from('existing_staff_claims').select('id', head).eq('agency_id', session.agency_id).eq('status', 'pending'),
+    supabase.from('leads').select('id', head).eq('agency_id', session.agency_id).eq('status', 'new'),
   ])
   const unreadThreads = (threads.data ?? []).filter((t) => t.last_message_at > t.admin_last_read_at).length
 
@@ -28,6 +29,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         { href: '/admin/messages', label: 'Messages', count: unreadThreads },
         { href: '/admin/moderation', label: 'Reviews & requests', count: (reviews.count ?? 0) + (claims.count ?? 0) },
         { href: '/admin/payments', label: 'Payments' },
+        { href: '/admin/analytics', label: 'Analytics' },
+        { href: '/admin/leads', label: 'Leads', count: leads.count ?? 0 },
         { href: '/admin/staff', label: 'Staff' },
         { href: '/admin/categories', label: 'Categories' },
         { href: '/admin/jobs', label: 'Vacancies' },

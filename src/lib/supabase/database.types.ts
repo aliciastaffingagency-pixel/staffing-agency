@@ -546,6 +546,112 @@ export type Database = {
           }
         ]
       }
+      leads: {
+        Row: {
+          id: string
+          agency_id: string
+          name: string | null
+          phone: string | null
+          email: string | null
+          need: string
+          area: string | null
+          start_date: string | null
+          budget: string | null
+          source: string
+          transcript: Json | null
+          status: Database['public']['Enums']['lead_status']
+          admin_notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          agency_id: string
+          name?: string | null
+          phone?: string | null
+          email?: string | null
+          need: string
+          area?: string | null
+          start_date?: string | null
+          budget?: string | null
+          source?: string
+          transcript?: Json | null
+          status?: Database['public']['Enums']['lead_status']
+          admin_notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          agency_id?: string
+          name?: string | null
+          phone?: string | null
+          email?: string | null
+          need?: string
+          area?: string | null
+          start_date?: string | null
+          budget?: string | null
+          source?: string
+          transcript?: Json | null
+          status?: Database['public']['Enums']['lead_status']
+          admin_notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'leads_agency_id_fkey'
+            columns: ['agency_id']
+            isOneToOne: false
+            referencedRelation: 'agencies'
+            referencedColumns: ['id']
+          }
+        ]
+      }
+      match_queries: {
+        Row: {
+          id: number
+          agency_id: string
+          user_id: string | null
+          query: string
+          category_slug: string | null
+          area: string | null
+          results: number
+          engine: string
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          agency_id: string
+          user_id?: string | null
+          query: string
+          category_slug?: string | null
+          area?: string | null
+          results?: number
+          engine: string
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          agency_id?: string
+          user_id?: string | null
+          query?: string
+          category_slug?: string | null
+          area?: string | null
+          results?: number
+          engine?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'match_queries_agency_id_fkey'
+            columns: ['agency_id']
+            isOneToOne: false
+            referencedRelation: 'agencies'
+            referencedColumns: ['id']
+          }
+        ]
+      }
       message_threads: {
         Row: {
           id: string
@@ -1278,6 +1384,7 @@ export type Database = {
       contract_status: 'draft' | 'sent' | 'client_signed' | 'fully_signed' | 'active' | 'ended' | 'cancelled'
       employment_type: 'full_time' | 'part_time' | 'contract' | 'temporary' | 'casual'
       engagement_preference: 'join_agency' | 'own_terms'
+      lead_status: 'new' | 'contacted' | 'converted' | 'closed'
       live_arrangement: 'live_in' | 'live_out' | 'either'
       notification_type: 'new_request' | 'matched' | 'contract_ready' | 'payment_received' | 'rating_submitted' | 'replacement_requested' | 'dispute_raised' | 'new_application' | 'contract_signed' | 'booking_update' | 'new_message' | 'claim_update'
       payment_method: 'mpesa' | 'card' | 'cash' | 'bank'
