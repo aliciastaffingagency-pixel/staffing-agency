@@ -4,11 +4,11 @@ import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import { AGENCY_SLUG } from '@/lib/agency'
 import { createClient } from '@/lib/supabase/server'
+import { siteUrl } from '@/lib/site-url'
 import { safeNext } from '@/lib/utils'
 
 export type AuthState = { error?: string; message?: string; fields?: Record<string, string> }
 
-const siteUrl = () => process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
 const callbackUrl = (next: string) => `${siteUrl()}/auth/callback?next=${encodeURIComponent(next)}`
 
 const email = z.string().trim().toLowerCase().email('Enter a valid email address')

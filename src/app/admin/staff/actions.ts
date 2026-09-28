@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { z } from 'zod'
 import type { FormState } from '@/components/ui/form'
 import { requireRole } from '@/lib/auth'
+import { siteUrl } from '@/lib/site-url'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { splitList } from '@/lib/utils'
@@ -180,7 +181,7 @@ export async function grantStaffLogin(_prev: FormState, formData: FormData): Pro
   if (staff.user_id) return { error: 'This staff member already has a login.' }
 
   const admin = createAdminClient()
-  const site = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
+  const site = siteUrl()
   const { data: invited, error } = await admin.auth.admin.inviteUserByEmail(parsed.data.email, {
     data: { full_name: staff.full_name, agency_slug: process.env.NEXT_PUBLIC_AGENCY_SLUG ?? 'alicia' },
     redirectTo: `${site}/auth/callback?next=/staff-portal`,

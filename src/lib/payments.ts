@@ -2,11 +2,12 @@ import 'server-only'
 import { createHmac, timingSafeEqual } from 'node:crypto'
 import { advanceContract } from '@/lib/contracts'
 import { notify, notifyClient } from '@/lib/notify'
+import { siteUrl } from '@/lib/site-url'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { Json } from '@/lib/supabase/database.types'
 import { formatKes } from '@/lib/utils'
 
-const SITE = () => process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
+const SITE = siteUrl
 
 // ===========================================================================
 // M-Pesa Daraja — STK Push ("Lipa na M-Pesa Online")

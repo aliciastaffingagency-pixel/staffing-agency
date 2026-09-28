@@ -1,11 +1,12 @@
 import 'server-only'
 import { after } from 'next/server'
+import { siteUrl } from '@/lib/site-url'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { Enums } from '@/lib/supabase/database.types'
 
 type NotificationType = Enums<'notification_type'>
 
-const SITE = () => process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
+const SITE = siteUrl
 
 const escapeHtml = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!)
 

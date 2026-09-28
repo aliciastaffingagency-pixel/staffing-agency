@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import { Dancing_Script, Poppins } from 'next/font/google'
+import { siteUrl } from '@/lib/site-url'
 import './globals.css'
 
 const poppins = Poppins({
@@ -15,7 +16,7 @@ const dancing = Dancing_Script({
 })
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'),
+  metadataBase: new URL(siteUrl()),
   title: {
     default: 'Alicia Staffing Agency — Trusted Home & Business Staff',
     template: '%s | Alicia Staffing Agency',

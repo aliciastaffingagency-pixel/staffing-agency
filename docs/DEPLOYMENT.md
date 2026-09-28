@@ -12,7 +12,7 @@ These are the steps to put Alicia Staffing Agency on its own domain, with paymen
    | --- | --- |
    | `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Project Settings → API |
    | `NEXT_PUBLIC_AGENCY_SLUG` | `alicia` |
-   | `NEXT_PUBLIC_SITE_URL` | `https://<your-domain>` |
+   | `NEXT_PUBLIC_SITE_URL` | Leave it unset. The production domain is detected automatically, and a leftover `http://localhost:3000` value is ignored on Vercel. Set it only to force a specific domain. |
 
    `DATABASE_URL` is only needed for migrations from your computer. Don't add it to Vercel.
 4. Deploy. Then go to **Settings → Domains** and add your domain **(owner)**.
